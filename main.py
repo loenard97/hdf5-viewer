@@ -11,8 +11,13 @@ if sys.platform == "win32":
 
 
 def main():
+    if len(sys.argv) > 2:
+        open_file = sys.argv[1]
+    else:
+        open_file = None
+
     app = QApplication(sys.argv)
-    main_win = MainWindow()
+    main_win = MainWindow(open_file)
     main_win.show()
     sys.exit(app.exec())
 

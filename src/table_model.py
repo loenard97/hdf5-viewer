@@ -93,3 +93,32 @@ class TableModel(QAbstractTableModel):
             if orientation == Qt.Orientation.Vertical:
                 return section + 1
         return None
+
+
+class DataTable(QAbstractTableModel):
+    """
+    Table Array from 2D Array
+    """
+    
+    def __init__(self, data):
+        QAbstractTableModel.__init__(self)
+        self._data = data
+
+    def rowCount(self, parent=None) -> int:
+        """
+        Get Row Count
+        """
+        return self._data.shape[0]
+
+    def columnCount(self, parent=None) -> int:
+        """
+        Get Column Count
+        """
+        return self._data.shape[1]
+
+    def data(self, index: QModelIndex, role=Qt.ItemDataRole.DisplayRole):
+        """
+        Get Data, Alignment, Colors etc. depending on Role
+        """
+        if role == Qt.ItemDataRole.DisplayRole:
+            return float(self._data[index.row()][index.column()])

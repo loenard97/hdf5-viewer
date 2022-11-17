@@ -3,4 +3,8 @@
 /build
 /dist
 */__pycache__
+test*
 *.spec
+*.h5
+*.hdf5
+*.png
