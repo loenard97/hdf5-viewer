@@ -1,9 +1,11 @@
 /.idea
 /venv
-/build
-/dist
+/build/main
+/dist/main
+/dist/installer_deb
 */__pycache__
 test*
+*.exe
 *.spec
 *.h5
 *.hdf5

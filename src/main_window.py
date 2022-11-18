@@ -3,26 +3,28 @@ import h5py
 import numpy as np
 import pyqtgraph as pg
 
-from PyQt6.QtCore import Qt, pyqtSlot, QAbstractTableModel
-from PyQt6.QtGui import QAction, QIcon
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QSplitter, QTableView, QFormLayout, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QLabel
+from PyQt6.QtCore import Qt, pyqtSlot
+from PyQt6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTreeWidget
 
+from src.static_functions import file_size_to_str
 from src.table_model import TableModel, DataTable
-from src.tree_widget import FileTreeWidget
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self, init_file_path):
         super().__init__(flags=Qt.WindowType.Window)
+        self.setAcceptDrops(True)
 
+        # Variables
         self._curr_file = None
         self._curr_obj_path = None
 
         # Appearance
         self.setGeometry(300, 150, 1400, 700)
-        self.setWindowTitle("HDF5 File Viewer")
-        self.setWindowIcon(QIcon(os.path.join("img", "file.svg")))
+        self.setWindowTitle("HDF5 Viewer")
+        self.setWindowIcon(QIcon(os.path.join("img", "h5.svg")))
 
         # Layout Right Side
         self._table_model = TableModel(header=['Attribute', 'Value'])
@@ -30,8 +32,9 @@ class MainWindow(QMainWindow):
         self._table_view.setModel(self._table_model)
         form_layout = QFormLayout()
         self._plot_selection = QComboBox()
-        self._plot_selection.addItems(["Auto", "None", "Text", "1D Plot", "Table", "2D Image", "2D RGB Image"])
-        self._plot_selection.currentTextChanged.connect(self._handle_plot_changed)
+        self._plot_selection.addItems(["None", "Text", "1D Plot", "Table", "2D Image", "2D RGB Image"])
+        self._plot_selection.setCurrentText("1D Plot")
+        self._plot_selection.currentTextChanged.connect(self._plot_data)
         form_layout.addRow("Show Dataset as", self._plot_selection)
         form_widget = QWidget()
         form_widget.setLayout(form_layout)
@@ -42,7 +45,7 @@ class MainWindow(QMainWindow):
         self._layout_right.addWidget(self._plot_widget)
 
         # Center Layout
-        self._tree_widget = FileTreeWidget(self)
+        self._tree_widget = QTreeWidget(self)
         self._tree_widget.setColumnCount(2)
         self._tree_widget.setHeaderLabels(["Name", "Type"])
         self._tree_widget.setAcceptDrops(True)
@@ -55,32 +58,36 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
         # File Menu
+        file_menu = self.menuBar().addMenu("&File")
+
         action_open_file = QAction('&Open File...', self)
         action_open_file.setShortcut('Ctrl+O')
         action_open_file.triggered.connect(self._handle_action_open_file)
-        self.menuBar().addMenu('&File').addAction(action_open_file)
+        file_menu.addAction(action_open_file)
 
-        self.show()
+        action_clear_files = QAction('&Clear all Files', self)
+        action_clear_files.triggered.connect(self._handle_action_clear_files)
+        file_menu.addAction(action_clear_files)
 
+        # Open File when double clicking on it
         if init_file_path is not None:
-            self.open_file(init_file_path)
+            self._open_file(init_file_path)
 
-    def open_file(self, file_path):
+    def _open_file(self, file_path):
         """
         Open one File
         """
         try:
             # Load TreeView from File
             with h5py.File(file_path, 'r') as file:
-                print(f"Open '{file_path}'")
                 parent_item = QTreeWidgetItem()
                 parent_item.setText(0, file_path)
                 parent_item.setText(1, "HDF5 File")
-                parent_item.setIcon(1, QIcon(os.path.join("img", "file.svg")))
+                parent_item.setIcon(1, QIcon(os.path.join("img", "h5.svg")))
                 self._hdf5_recursion(hdf5_object=file, root=parent_item, parent=parent_item)
-                self._tree_widget.insertTopLevelItems(0, [parent_item])
+                self._tree_widget.insertTopLevelItem(self._tree_widget.topLevelItemCount(), parent_item)
         except (OSError, ValueError):
-            print(f"Failed to open '{file_path}'")
+            pass
 
     def _tree_recursion(self, item, path):
         """
@@ -101,7 +108,7 @@ class MainWindow(QMainWindow):
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Group")
-                child_item.setIcon(1, QIcon(os.path.join("img", "group.png")))
+                child_item.setIcon(1, QIcon(os.path.join("img", "group.svg")))
                 parent.addChild(child_item)
                 self._hdf5_recursion(value, root, child_item)
 
@@ -109,30 +116,25 @@ class MainWindow(QMainWindow):
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Dataset")
-                child_item.setIcon(1, QIcon(os.path.join("img", "dataset.png")))
+                child_item.setIcon(1, QIcon(os.path.join("img", "dataset.svg")))
                 parent.addChild(child_item)
 
     def _plot_data(self):
         """
-        Update Plot
+        Update Plot Widget
         """
-        text = self._plot_selection.currentText()
-        print(f"Update Plot to {text}")
+        plot_type = self._plot_selection.currentText()
 
         if self._curr_file is None or self._curr_obj_path is None or not os.path.exists(self._curr_file):
             data = np.array([])
         else:
             with h5py.File(self._curr_file, 'r') as file:
                 data = np.array(file[self._curr_obj_path])
-                print(data.shape, data.size)
 
-        if text == "None":
+        if plot_type == "None":
             new_widget = QWidget()
-        
-        elif text == "Auto":
-            new_widget = QLabel("Undefined Option")
 
-        elif text == "Text":
+        elif plot_type == "Text":
             try:
                 label = str(data)
             except:
@@ -141,17 +143,17 @@ class MainWindow(QMainWindow):
                 label = label[:1000] + '...'
             new_widget = QLabel(label)
 
-        elif text == "1D Plot":
+        elif plot_type == "1D Plot":
             if len(data.shape) == 1:
                 new_widget = pg.PlotWidget()
                 try:
                     new_widget.plot(data)
                 except:
-                    print("Could not plot")
+                    pass
             else:
                 new_widget = QLabel("Dataset is not 1D")
         
-        elif text == "2D Image":
+        elif plot_type == "2D Image":
             if len(data.shape) == 2:
                 new_widget = pg.ImageView()
                 new_widget.setImage(data)
@@ -159,17 +161,16 @@ class MainWindow(QMainWindow):
             else:
                 new_widget = QLabel("Dataset is not 2D")
 
-        elif text == "2D RGB Image":
+        elif plot_type == "2D RGB Image":
             if len(data.shape) == 3 and data.shape[0] == 3:
                 data = np.sum(data, axis=0)
-                print(data.shape)
                 new_widget = pg.ImageView()
                 new_widget.setImage(data)
                 new_widget.setColorMap(pg.colormap.get("inferno"))
             else:
                 new_widget = QLabel("Dataset is not a 2D RGB Image")
         
-        elif text == "Table":
+        elif plot_type == "Table":
             if len(data.shape) <= 2 and data.size < 100:
                 new_widget = QTableView()
                 model = DataTable(data)
@@ -180,27 +181,42 @@ class MainWindow(QMainWindow):
         else:
             new_widget = QLabel("Undefined Option")
 
+        # Replace old Plot Widget
         self._layout_right.replaceWidget(self._plot_widget, new_widget)
         self._plot_widget.hide()
         self._plot_widget.destroy()
         self._plot_widget = new_widget
 
-    # ----- Slots -----
-    @pyqtSlot(str)
-    def _handle_plot_changed(self, text):
+    # ----- Drag & Drop -----
+    def dragEnterEvent(self, event: QDragEnterEvent):
         """
-        Change current Plot
+        Accept Drag Events for h5 and hdf5 files to initiate Drag & Drop Events
         """
-        print(f"Change Plot to {text}")
-        print(self._curr_file)
-        print(self._curr_obj_path)
-        self._plot_data()
+        for file in event.mimeData().text().split('\n'):
+            if len(file) == 0:
+                continue
+            if not file.split('.')[-1] in ['h5', 'hdf5']:
+                return
+        event.acceptProposedAction()
+    
+    def dropEvent(self, event: QDropEvent):
+        """
+        Open Files that are dropped into Window
+        """
+        files = event.mimeData().text().split('\n')
+        for f in files:
+            self._open_file(f[8:])
+        event.acceptProposedAction()
 
+    # ----- Slots -----
     @pyqtSlot(QTreeWidgetItem, QTreeWidgetItem)
     def _handle_item_changed(self, current, _):
         """
         Update Info of currently selected Item
         """
+        if current is None:
+            return
+
         parents_list = [current.text(0)]
         self._tree_recursion(current, parents_list)
         parents_list.reverse()
@@ -214,6 +230,7 @@ class MainWindow(QMainWindow):
             # Selected Item is a File
             self._table_model.resetData()
             self._table_model.appendRow(["Name", parents_list[0]])
+            self._table_model.appendRow(["File Size", file_size_to_str(parents_list[0])])
             return
 
         with h5py.File(parents_list[0], 'r') as file:
@@ -243,4 +260,12 @@ class MainWindow(QMainWindow):
         # Get File Name
         file_path, _ = QFileDialog.getOpenFileName(
             self, 'Open file', os.getcwd(), "HDF5 File (*.hdf5, *.h5);;All Files (*.*)")
-        self.open_file(file_path)
+        self._open_file(file_path)
+    
+    @pyqtSlot()
+    def _handle_action_clear_files(self):
+        """
+        Clear Tree Widget
+        """
+        self._tree_widget.clear()
+        self._table_model.resetData()
