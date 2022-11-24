@@ -8,6 +8,8 @@ def build():
         '--windowed',
         '--icon=img/h5.ico',
         '--add-data=img/*;img',
+        '--add-data=LICENSE;.',
+        '--add-data=README.md;.',
     ])
 
 

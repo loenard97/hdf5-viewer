@@ -5,7 +5,7 @@ import pyqtgraph as pg
 
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTreeWidget
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTreeWidget, QMessageBox
 
 from src.static_functions import file_size_to_str
 from src.table_model import TableModel, DataTable
@@ -65,9 +65,28 @@ class MainWindow(QMainWindow):
         action_open_file.triggered.connect(self._handle_action_open_file)
         file_menu.addAction(action_open_file)
 
+        action_open_folder = QAction('&Open Folder...', self)
+        action_open_folder.triggered.connect(self._handle_action_open_folder)
+        file_menu.addAction(action_open_folder)
+
         action_clear_files = QAction('&Clear all Files', self)
         action_clear_files.triggered.connect(self._handle_action_clear_files)
         file_menu.addAction(action_clear_files)
+
+        file_menu.addSeparator()
+
+        action_quit = QAction("&Quit", self)
+        action_quit.setShortcut("Ctrl+Q")
+        action_quit.triggered.connect(self.close)
+        file_menu.addAction(action_quit)
+        
+        # Export Menu
+        export_menu = self.menuBar().addMenu("&Export")
+        action_export = QAction('&Export Dataset...', self)
+        action_export.setShortcut('Ctrl+E')
+        action_export.triggered.connect(self._handle_action_export)
+        export_menu.addAction(action_export)
+
 
         # Open File when double clicking on it
         if init_file_path is not None:
@@ -108,7 +127,7 @@ class MainWindow(QMainWindow):
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Group")
-                child_item.setIcon(1, QIcon(os.path.join("img", "group.svg")))
+                # child_item.setIcon(1, QIcon(os.path.join("img", "group.svg")))
                 parent.addChild(child_item)
                 self._hdf5_recursion(value, root, child_item)
 
@@ -203,9 +222,8 @@ class MainWindow(QMainWindow):
         """
         Open Files that are dropped into Window
         """
-        files = event.mimeData().text().split('\n')
-        for f in files:
-            self._open_file(f[8:])
+        for file in event.mimeData().text().split('\n'):
+            self._open_file(file[8:])
         event.acceptProposedAction()
 
     # ----- Slots -----
@@ -255,12 +273,23 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def _handle_action_open_file(self):
         """
-        Open HDF5 File
+        Open HDF5 Files
         """
-        # Get File Name
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, 'Open file', os.getcwd(), "HDF5 File (*.hdf5, *.h5);;All Files (*.*)")
-        self._open_file(file_path)
+        file_paths, _ = QFileDialog.getOpenFileNames(
+            self, "Open File", os.path.expanduser('~'), "HDF5 File (*.hdf5, *.h5);;All Files (*.*)")
+        for file in file_paths:
+            self._open_file(file)
+
+    @pyqtSlot()
+    def _handle_action_open_folder(self):
+        """
+        Open all HDF5 Files in a Folder
+        """
+        folder_path = QFileDialog.getExistingDirectory(
+            self, "Open Folder", os.path.expanduser('~'))
+        if folder_path:
+            for file in os.listdir(folder_path):
+                self._open_file(os.path.join(folder_path, file))
     
     @pyqtSlot()
     def _handle_action_clear_files(self):
@@ -269,3 +298,28 @@ class MainWindow(QMainWindow):
         """
         self._tree_widget.clear()
         self._table_model.resetData()
+
+    @pyqtSlot()
+    def _handle_action_export(self):
+        """
+        Export selected Dataset
+        """
+        # Get Dataset
+        try:
+            with h5py.File(self._curr_file, 'r') as h5_file:
+                dataset = np.array(h5_file[self._curr_obj_path])
+        except ValueError:
+            QMessageBox.critical(self, "Error", "No Dataset selected")
+            return
+
+        # Get File Path
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Export Dataset", os.path.expanduser('~'), "CSV File (*.csv);;Numpy File (*.npy);;All Files (*.*)")
+
+        # Save File
+        file_type = file_path.split('.')[-1]
+        if file_type == 'csv':
+            np.savetxt(fname=file_path, X=dataset, delimiter=',', newline='\n', fmt='%.0f')
+        
+        elif file_type == 'npy':
+            np.save(file=file_path, arr=dataset)

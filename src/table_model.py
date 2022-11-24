@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex
 
 class TableModel(QAbstractTableModel):
     """
-    Table Model that asserts correct Data Types for each Row.
+    Table Model that can append and remove Rows
     """
 
     def __init__(self, header):
@@ -97,7 +97,7 @@ class TableModel(QAbstractTableModel):
 
 class DataTable(QAbstractTableModel):
     """
-    Table Array from 2D Array
+    Table Model for 2D Numpy Arrays
     """
     
     def __init__(self, data):
