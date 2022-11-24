@@ -3,7 +3,7 @@ import PyInstaller.__main__
 
 def build():
     PyInstaller.__main__.run([
-        'main.py',
+        'hdf5viewer.py',
         '--noconfirm',
         '--windowed',
         '--icon=img/h5.ico',

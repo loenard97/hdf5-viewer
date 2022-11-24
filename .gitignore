@@ -1,8 +1,10 @@
 /.idea
 /venv
-/build/main
-/dist/main
-/dist/installer_deb
+/build
+/dist
+/debian/.debhelper
+/debian/hdf5viewer
+/package
 */__pycache__
 test*
 *.exe

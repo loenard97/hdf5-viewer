@@ -1,0 +1,15 @@
+Source: hdf5viewer
+Section: python
+Priority: optional
+Maintainer: Dennis Lönard, dennis.loenard97@gmx.de
+Build-Depends: debhelper (>=13), python3(>=3.9)
+Standards-Version: 3.9.2
+X-Python-Version: >=3.9
+
+
+Package: hdf5viewer
+Architecture: all
+Section: python
+Depends: ${misc:Depends}, ${python:Depends}
+Description: HDF5 File Viewer
+	A File Viewer for HDF5 Files.
