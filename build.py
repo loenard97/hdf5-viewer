@@ -6,8 +6,9 @@ def build():
         'hdf5viewer.py',
         '--noconfirm',
         '--windowed',
-        '--icon=img/h5.ico',
+        '--icon=img/file.ico',
         '--add-data=img/*;img',
+        '--add-data=html/*;html',
         '--add-data=LICENSE;.',
         '--add-data=README.md;.',
     ])

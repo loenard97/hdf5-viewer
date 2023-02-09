@@ -5,8 +5,10 @@ import pyqtgraph as pg
 
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTreeWidget, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QWidget, QVBoxLayout, \
+    QHBoxLayout, QLabel, QTreeWidget, QMessageBox
 
+from src.about_page import AboutPage
 from src.static_functions import file_size_to_str
 from src.table_model import TableModel, DataTable
 
@@ -22,20 +24,15 @@ class MainWindow(QMainWindow):
         self._curr_obj_path = None
 
         # Appearance
-        self.setGeometry(300, 150, 1400, 700)
+        self.setMinimumSize(1400, 700)
         self.setWindowTitle("HDF5 Viewer")
-        self.setWindowIcon(QIcon(os.path.join("img", "h5.svg")))
+        self.setWindowIcon(QIcon(os.path.join("img", "file.svg")))
 
         # Layout Right Side
         self._table_model = TableModel(header=['Attribute', 'Value'])
         self._table_view = QTableView()
         self._table_view.setModel(self._table_model)
         form_layout = QFormLayout()
-        self._plot_selection = QComboBox()
-        self._plot_selection.addItems(["None", "Text", "1D Plot", "Table", "2D Image", "2D RGB Image"])
-        self._plot_selection.setCurrentText("1D Plot")
-        self._plot_selection.currentTextChanged.connect(self._plot_data)
-        form_layout.addRow("Show Dataset as", self._plot_selection)
         form_widget = QWidget()
         form_widget.setLayout(form_layout)
         self._plot_widget = pg.PlotWidget()
@@ -48,8 +45,9 @@ class MainWindow(QMainWindow):
         self._tree_widget = QTreeWidget(self)
         self._tree_widget.setColumnCount(2)
         self._tree_widget.setHeaderLabels(["Name", "Type"])
+        self._tree_widget.setColumnWidth(0, 500)
         self._tree_widget.setAcceptDrops(True)
-        self._tree_widget.currentItemChanged.connect(self._handle_item_changed)
+        self._tree_widget.currentItemChanged.connect(self._handle_item_changed)    # NOQA
         central_widget = QHBoxLayout()
         central_widget.addWidget(self._tree_widget)
         central_widget.addLayout(self._layout_right)
@@ -59,36 +57,42 @@ class MainWindow(QMainWindow):
 
         # File Menu
         file_menu = self.menuBar().addMenu("&File")
-
         action_open_file = QAction('&Open File...', self)
+        action_open_file.setIcon(QIcon(os.path.join("img", "file.svg")))
         action_open_file.setShortcut('Ctrl+O')
-        action_open_file.triggered.connect(self._handle_action_open_file)
+        action_open_file.triggered.connect(self._handle_action_open_file)    # NOQA
         file_menu.addAction(action_open_file)
-
         action_open_folder = QAction('&Open Folder...', self)
-        action_open_folder.triggered.connect(self._handle_action_open_folder)
+        action_open_folder.setIcon(QIcon(os.path.join("img", "group.svg")))
+        action_open_folder.triggered.connect(self._handle_action_open_folder)    # NOQA
         file_menu.addAction(action_open_folder)
-
         action_clear_files = QAction('&Clear all Files', self)
-        action_clear_files.triggered.connect(self._handle_action_clear_files)
+        action_clear_files.setIcon(QIcon(os.path.join("img", "file_clear.svg")))
+        action_clear_files.triggered.connect(self._handle_action_clear_files)    # NOQA
         file_menu.addAction(action_clear_files)
-
         file_menu.addSeparator()
-
         action_quit = QAction("&Quit", self)
+        action_quit.setIcon(QIcon(os.path.join("img", "quit.svg")))
         action_quit.setShortcut("Ctrl+Q")
-        action_quit.triggered.connect(self.close)
+        action_quit.triggered.connect(self.close)    # NOQA
         file_menu.addAction(action_quit)
         
         # Export Menu
         export_menu = self.menuBar().addMenu("&Export")
         action_export = QAction('&Export Dataset...', self)
+        action_export.setIcon(QIcon(os.path.join("img", "export.svg")))
         action_export.setShortcut('Ctrl+E')
-        action_export.triggered.connect(self._handle_action_export)
+        action_export.triggered.connect(self._handle_action_export)    # NOQA
         export_menu.addAction(action_export)
 
+        # Help Menu
+        help_menu = self.menuBar().addMenu("&Help")
+        action_about = QAction("&About Page...", self)
+        action_about.setIcon(QIcon(os.path.join("img", "about.svg")))
+        action_about.triggered.connect(self._handle_action_about)    # NOQA
+        help_menu.addAction(action_about)
 
-        # Open File when double clicking on it
+        # Open File when double-clicking on it
         if init_file_path is not None:
             self._open_file(init_file_path)
 
@@ -102,7 +106,7 @@ class MainWindow(QMainWindow):
                 parent_item = QTreeWidgetItem()
                 parent_item.setText(0, file_path)
                 parent_item.setText(1, "HDF5 File")
-                parent_item.setIcon(1, QIcon(os.path.join("img", "h5.svg")))
+                parent_item.setIcon(1, QIcon(os.path.join("img", "file.svg")))
                 self._hdf5_recursion(hdf5_object=file, root=parent_item, parent=parent_item)
                 self._tree_widget.insertTopLevelItem(self._tree_widget.topLevelItemCount(), parent_item)
         except (OSError, ValueError):
@@ -127,7 +131,7 @@ class MainWindow(QMainWindow):
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Group")
-                # child_item.setIcon(1, QIcon(os.path.join("img", "group.svg")))
+                child_item.setIcon(1, QIcon(os.path.join("img", "group.svg")))
                 parent.addChild(child_item)
                 self._hdf5_recursion(value, root, child_item)
 
@@ -142,63 +146,35 @@ class MainWindow(QMainWindow):
         """
         Update Plot Widget
         """
-        plot_type = self._plot_selection.currentText()
-
         if self._curr_file is None or self._curr_obj_path is None or not os.path.exists(self._curr_file):
-            data = np.array([])
-        else:
-            with h5py.File(self._curr_file, 'r') as file:
-                data = np.array(file[self._curr_obj_path])
+            return
 
-        if plot_type == "None":
-            new_widget = QWidget()
+        with h5py.File(self._curr_file, 'r') as file:
+            data = np.array(file[self._curr_obj_path])
 
-        elif plot_type == "Text":
-            try:
-                label = str(data)
-            except:
-                new_widget = QLabel("Could not convert Dataset to Text")
-            if len(label) > 1000:
-                label = label[:1000] + '...'
+        if str(data.dtype).startswith('|S'):
+            label = ''
+            for e in data:
+                label += e.decode() + '\n'
             new_widget = QLabel(label)
-
-        elif plot_type == "1D Plot":
-            if len(data.shape) == 1:
-                new_widget = pg.PlotWidget()
-                try:
-                    new_widget.plot(data)
-                except:
-                    pass
-            else:
-                new_widget = QLabel("Dataset is not 1D")
-        
-        elif plot_type == "2D Image":
-            if len(data.shape) == 2:
-                new_widget = pg.ImageView()
-                new_widget.setImage(data)
-                new_widget.setColorMap(pg.colormap.get("inferno"))
-            else:
-                new_widget = QLabel("Dataset is not 2D")
-
-        elif plot_type == "2D RGB Image":
-            if len(data.shape) == 3 and data.shape[0] == 3:
-                data = np.sum(data, axis=0)
-                new_widget = pg.ImageView()
-                new_widget.setImage(data)
-                new_widget.setColorMap(pg.colormap.get("inferno"))
-            else:
-                new_widget = QLabel("Dataset is not a 2D RGB Image")
-        
-        elif plot_type == "Table":
-            if len(data.shape) <= 2 and data.size < 100:
-                new_widget = QTableView()
-                model = DataTable(data)
-                new_widget.setModel(model)
-            else:
-                new_widget = QLabel("Dataset is not 2D or is to large for Table")
-
+        elif data.dtype == np.dtype('float32') and len(data.shape) == 1:
+            new_widget = pg.PlotWidget()
+            new_widget.plot(data)
+        elif data.dtype == np.dtype('float32') and len(data.shape) == 2:
+            new_widget = pg.ImageView()
+            new_widget.setImage(data)
+            new_widget.setColorMap(pg.colormap.get("inferno"))
+        elif data.dtype == np.dtype('float32') and len(data.shape) <= 2 and data.size < 100:
+            new_widget = QTableView()
+            model = DataTable(data)
+            new_widget.setModel(model)
+        elif data.dtype == np.dtype('float32') and len(data.shape) == 3 and data.shape[0] == 3:
+            data = np.sum(data, axis=0)
+            new_widget = pg.ImageView()
+            new_widget.setImage(data)
+            new_widget.setColorMap(pg.colormap.get("inferno"))
         else:
-            new_widget = QLabel("Undefined Option")
+            new_widget = QWidget()
 
         # Replace old Plot Widget
         self._layout_right.replaceWidget(self._plot_widget, new_widget)
@@ -323,3 +299,10 @@ class MainWindow(QMainWindow):
         
         elif file_type == 'npy':
             np.save(file=file_path, arr=dataset)
+
+    @pyqtSlot()
+    def _handle_action_about(self):
+        """
+        Open About Page
+        """
+        self.about_page = AboutPage()

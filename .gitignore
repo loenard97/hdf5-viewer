@@ -11,4 +11,6 @@ test*
 *.spec
 *.h5
 *.hdf5
+*.csv
+*.npy
 *.png
