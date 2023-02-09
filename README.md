@@ -50,3 +50,6 @@ The following Python libraries are used in this project:
  - [numpy](https://numpy.org/doc/stable/license.html)
  - [pyqtgraph](https://www.pyqtgraph.org/)
  - [PyInstaller](https://pyinstaller.org/en/stable/license.html)
+
+All icons are part of the <i>Core Line - Free</i> Icon-set from <a href="https://www.streamlinehq.com/">Streamline</a>
+and are licensed under a <a href="https://www.streamlinehq.com/license-freeLinkware">Link-ware License</a>.
