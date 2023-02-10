@@ -33,6 +33,12 @@ You will have to manually create a desktop shortcut and associate file extension
 (I couldn't figure out how to do this automatically. Maybe I'll do that in the future.)
 
 
+### Building binaries from source
+Run `pyinstaller.py` to generate the binary.
+Use the `windows/compile.iss` script with Inno Setup to generate Installer on Windows.
+Run the `build.sh` with `build-essential devscripts debhelper` installed to generate a deb package on Linux.
+
+
 ### Install from Source
 For all other Linux Distros you will have to download the Source Code and build it for yourself.
 I suggest creating a Python Virtual Environment:
@@ -42,7 +48,6 @@ python3 -m venv venv
 ./venv/bin/python3 hdf5viewer.py
 ```
 
-
 ## Acknowledgements and Licenses
 The following Python libraries are used in this project:
  - [PyQt6](https://riverbankcomputing.com/commercial/pyqt)
@@ -51,5 +56,5 @@ The following Python libraries are used in this project:
  - [pyqtgraph](https://www.pyqtgraph.org/)
  - [PyInstaller](https://pyinstaller.org/en/stable/license.html)
 
-All icons are part of the <i>Core Line - Free</i> Icon-set from <a href="https://www.streamlinehq.com/">Streamline</a>
-and are licensed under a <a href="https://www.streamlinehq.com/license-freeLinkware">Link-ware License</a>.
+All icons are part of the *Core Line - Free* Icon-set from [Streamline](https://www.streamlinehq.com/)
+and are licensed under a [Link-ware License](https://www.streamlinehq.com/license-freeLinkware).
