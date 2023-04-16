@@ -1,12 +1,16 @@
 /.idea
+/.mypy_cache
+/.pytest_cache
+/.tox
 /venv
 /build
 /dist
 /debian/.debhelper
 /debian/hdf5viewer
 /package
-*/__pycache__
-test*
+/{envtempdir}
+*__pycache__*
+*.egg-info*
 *.exe
 *.spec
 *.h5
@@ -14,3 +18,4 @@ test*
 *.csv
 *.npy
 *.png
+.coverage

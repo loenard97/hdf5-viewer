@@ -29,7 +29,7 @@ class TableModel(QAbstractTableModel):
         """
         return Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
 
-    def appendRow(self, new_data: list) -> bool:
+    def appendRow(self, new_data) -> bool:
         """
         Append Row
         """
@@ -99,18 +99,18 @@ class DataTable(QAbstractTableModel):
     """
     Table Model for 2D Numpy Arrays
     """
-    
+
     def __init__(self, data):
         QAbstractTableModel.__init__(self)
         self._data = data
 
-    def rowCount(self, parent=None) -> int:
+    def rowCount(self, parent=None):
         """
         Get Row Count
         """
         return self._data.shape[0]
 
-    def columnCount(self, parent=None) -> int:
+    def columnCount(self, parent=None):
         """
         Get Column Count
         """

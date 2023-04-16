@@ -4,7 +4,7 @@
 #define MyAppName "HDF5 Viewer"
 #define MyAppVersion "1.2"
 #define MyAppPublisher "Dennis Lönard"
-#define MyAppExeName "hdf5viewer.exe"
+#define MyAppExeName "main.exe"
 #define MyAppAssocName "HDF5 File"
 #define MyAppAssocExt ".h5"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
@@ -39,8 +39,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\dist\hdf5viewer\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\dist\hdf5viewer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\main\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\main\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

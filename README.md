@@ -1,4 +1,7 @@
 # HDF5 File Viewer
+
+![Tests](https://github.com/loenard97/hdf5-viewer/actions/workflows/tests.yml/badge.svg)
+
 A Python Application to view HDF5 Files.
 
 HDF5 Files are developed by the [HDF5 Group](https://www.hdfgroup.org/solutions/hdf5/).

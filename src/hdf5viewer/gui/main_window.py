@@ -1,4 +1,5 @@
 import os
+import sys
 import h5py
 import numpy as np
 import pyqtgraph as pg
@@ -8,25 +9,30 @@ from PyQt6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QWidget, QVBoxLayout, \
     QHBoxLayout, QLabel, QTreeWidget, QMessageBox
 
-from src.about_page import AboutPage
-from src.static_functions import file_size_to_str
-from src.table_model import TableModel, DataTable
+from hdf5viewer.gui.about_page import AboutPage
+from hdf5viewer.gui.static_functions import file_size_to_str
+from hdf5viewer.gui.table_model import TableModel, DataTable
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, init_file_path):
+    def __init__(self, init_file_path: str):
         super().__init__(flags=Qt.WindowType.Window)
         self.setAcceptDrops(True)
 
         # Variables
-        self._curr_file = None
-        self._curr_obj_path = None
+        self._curr_file = ''
+        self._curr_obj_path = ''
+        if getattr(sys, 'frozen', False):
+            application_path = os.path.dirname(sys.executable)
+        else:
+            application_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self._icon_dir = os.path.join(application_path, "img")
 
         # Appearance
         self.setMinimumSize(1400, 700)
         self.setWindowTitle("HDF5 Viewer")
-        self.setWindowIcon(QIcon(os.path.join("img", "file.svg")))
+        self.setWindowIcon(QIcon(os.path.join(self._icon_dir, "file.svg")))
 
         # Layout Right Side
         self._table_model = TableModel(header=['Attribute', 'Value'])
@@ -58,29 +64,29 @@ class MainWindow(QMainWindow):
         # File Menu
         file_menu = self.menuBar().addMenu("&File")
         action_open_file = QAction('&Open File...', self)
-        action_open_file.setIcon(QIcon(os.path.join("img", "file.svg")))
+        action_open_file.setIcon(QIcon(os.path.join(self._icon_dir, "file.svg")))
         action_open_file.setShortcut('Ctrl+O')
         action_open_file.triggered.connect(self._handle_action_open_file)    # NOQA
         file_menu.addAction(action_open_file)
         action_open_folder = QAction('&Open Folder...', self)
-        action_open_folder.setIcon(QIcon(os.path.join("img", "group.svg")))
+        action_open_folder.setIcon(QIcon(os.path.join(self._icon_dir, "group.svg")))
         action_open_folder.triggered.connect(self._handle_action_open_folder)    # NOQA
         file_menu.addAction(action_open_folder)
         action_clear_files = QAction('&Clear all Files', self)
-        action_clear_files.setIcon(QIcon(os.path.join("img", "file_clear.svg")))
+        action_clear_files.setIcon(QIcon(os.path.join(self._icon_dir, "file_clear.svg")))
         action_clear_files.triggered.connect(self._handle_action_clear_files)    # NOQA
         file_menu.addAction(action_clear_files)
         file_menu.addSeparator()
         action_quit = QAction("&Quit", self)
-        action_quit.setIcon(QIcon(os.path.join("img", "quit.svg")))
+        action_quit.setIcon(QIcon(os.path.join(self._icon_dir, "quit.svg")))
         action_quit.setShortcut("Ctrl+Q")
-        action_quit.triggered.connect(self.close)    # NOQA
+        action_quit.triggered.connect(self._handle_close)    # NOQA
         file_menu.addAction(action_quit)
-        
+
         # Export Menu
         export_menu = self.menuBar().addMenu("&Export")
         action_export = QAction('&Export Dataset...', self)
-        action_export.setIcon(QIcon(os.path.join("img", "export.svg")))
+        action_export.setIcon(QIcon(os.path.join(self._icon_dir, "export.svg")))
         action_export.setShortcut('Ctrl+E')
         action_export.triggered.connect(self._handle_action_export)    # NOQA
         export_menu.addAction(action_export)
@@ -88,12 +94,12 @@ class MainWindow(QMainWindow):
         # Help Menu
         help_menu = self.menuBar().addMenu("&Help")
         action_about = QAction("&About Page...", self)
-        action_about.setIcon(QIcon(os.path.join("img", "about.svg")))
+        action_about.setIcon(QIcon(os.path.join(self._icon_dir, "about.svg")))
         action_about.triggered.connect(self._handle_action_about)    # NOQA
         help_menu.addAction(action_about)
 
         # Open File when double-clicking on it
-        if init_file_path is not None:
+        if init_file_path:
             self._open_file(init_file_path)
 
     def _open_file(self, file_path):
@@ -106,7 +112,7 @@ class MainWindow(QMainWindow):
                 parent_item = QTreeWidgetItem()
                 parent_item.setText(0, file_path)
                 parent_item.setText(1, "HDF5 File")
-                parent_item.setIcon(1, QIcon(os.path.join("img", "file.svg")))
+                parent_item.setIcon(1, QIcon(os.path.join(self._icon_dir, "file.svg")))
                 self._hdf5_recursion(hdf5_object=file, root=parent_item, parent=parent_item)
                 self._tree_widget.insertTopLevelItem(self._tree_widget.topLevelItemCount(), parent_item)
         except (OSError, ValueError):
@@ -131,7 +137,7 @@ class MainWindow(QMainWindow):
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Group")
-                child_item.setIcon(1, QIcon(os.path.join("img", "group.svg")))
+                child_item.setIcon(1, QIcon(os.path.join(self._icon_dir, "group.svg")))
                 parent.addChild(child_item)
                 self._hdf5_recursion(value, root, child_item)
 
@@ -139,10 +145,10 @@ class MainWindow(QMainWindow):
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Dataset")
-                child_item.setIcon(1, QIcon(os.path.join("img", "dataset.svg")))
+                child_item.setIcon(1, QIcon(os.path.join(self._icon_dir, "dataset.svg")))
                 parent.addChild(child_item)
 
-    def _plot_data(self):
+    def _plot_data(self) -> None:
         """
         Update Plot Widget
         """
@@ -152,6 +158,7 @@ class MainWindow(QMainWindow):
         with h5py.File(self._curr_file, 'r') as file:
             data = np.array(file[self._curr_obj_path])
 
+        new_widget: QWidget | pg.ImageView
         if str(data.dtype).startswith('|S'):
             label = ''
             for e in data:
@@ -193,7 +200,7 @@ class MainWindow(QMainWindow):
             if not file.split('.')[-1] in ['h5', 'hdf5']:
                 return
         event.acceptProposedAction()
-    
+
     def dropEvent(self, event: QDropEvent):
         """
         Open Files that are dropped into Window
@@ -243,7 +250,7 @@ class MainWindow(QMainWindow):
                 self._table_model.appendRow(["Shape", str(h5_obj.shape)])
                 self._table_model.appendRow(["Dimensions", str(h5_obj.ndim)])
                 self._table_model.appendRow(["Data Type", str(h5_obj.dtype)])
-        
+
         self._plot_data()
 
     @pyqtSlot()
@@ -266,7 +273,7 @@ class MainWindow(QMainWindow):
         if folder_path:
             for file in os.listdir(folder_path):
                 self._open_file(os.path.join(folder_path, file))
-    
+
     @pyqtSlot()
     def _handle_action_clear_files(self):
         """
@@ -284,8 +291,9 @@ class MainWindow(QMainWindow):
         try:
             with h5py.File(self._curr_file, 'r') as h5_file:
                 dataset = np.array(h5_file[self._curr_obj_path])
-        except ValueError:
-            QMessageBox.critical(self, "Error", "No Dataset selected")
+        except (ValueError, TypeError):
+            QMessageBox.information(
+                self, "Nothing selected", "Please select a File, Group or Dataset you want to export.")
             return
 
         # Get File Path
@@ -296,7 +304,7 @@ class MainWindow(QMainWindow):
         file_type = file_path.split('.')[-1]
         if file_type == 'csv':
             np.savetxt(fname=file_path, X=dataset, delimiter=',', newline='\n', fmt='%.0f')
-        
+
         elif file_type == 'npy':
             np.save(file=file_path, arr=dataset)
 
@@ -306,3 +314,10 @@ class MainWindow(QMainWindow):
         Open About Page
         """
         self.about_page = AboutPage()
+
+    @pyqtSlot()
+    def _handle_close(self):
+        """
+        Close Window
+        """
+        self.close()

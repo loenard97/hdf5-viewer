@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from src.main_window import MainWindow
+from hdf5viewer.gui.main_window import MainWindow
 
 if sys.platform == "win32":
     # Set Windows Taskbar Icon
@@ -14,7 +14,7 @@ def main():
     if len(sys.argv) >= 2:
         open_file = sys.argv[1]
     else:
-        open_file = None
+        open_file = ''
 
     app = QApplication(sys.argv)
     main_win = MainWindow(open_file)

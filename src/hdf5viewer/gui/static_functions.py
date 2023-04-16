@@ -3,7 +3,7 @@ import os
 
 def file_size_to_str(file_path: str) -> str:
     """
-    Get formated File Size
+    Get formatted File Size
     """
     size = os.path.getsize(file_path)
 
