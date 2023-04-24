@@ -5,6 +5,7 @@
 /venv
 /build
 /dist
+/out
 /debian/.debhelper
 /debian/hdf5viewer
 /package
@@ -18,4 +19,5 @@
 *.csv
 *.npy
 *.png
-.coverage
+*.coverage
+test.py

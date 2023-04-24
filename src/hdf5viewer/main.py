@@ -1,7 +1,9 @@
 import sys
+import argparse
 
 from PyQt6.QtWidgets import QApplication
 
+from hdf5viewer.cli.cli_server import parse_cli_args
 from hdf5viewer.gui.main_window import MainWindow
 
 if sys.platform == "win32":
@@ -11,15 +13,21 @@ if sys.platform == "win32":
 
 
 def main():
-    if len(sys.argv) >= 2:
-        open_file = sys.argv[1]
-    else:
-        open_file = ''
+    parser = argparse.ArgumentParser(
+        prog="HDF5 File Viewer",
+        description="A File Viewer for HDF5 Files.",
+    )
+    parser.add_argument("filename", help="H5 file to load", nargs='?', default='')
+    parser.add_argument("-e", "--export", help="Export H5 File to output file")
+    args = parser.parse_args()
 
-    app = QApplication(sys.argv)
-    main_win = MainWindow(open_file)
-    main_win.show()
-    sys.exit(app.exec())
+    if args.export is not None:
+        parse_cli_args(args)
+    else:
+        app = QApplication(sys.argv)
+        main_win = MainWindow(init_file_path=args.filename)
+        main_win.show()
+        sys.exit(app.exec())
 
 
 if __name__ == "__main__":

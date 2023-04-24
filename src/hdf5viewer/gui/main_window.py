@@ -10,8 +10,8 @@ from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableVie
     QHBoxLayout, QLabel, QTreeWidget, QMessageBox
 
 from hdf5viewer.gui.about_page import AboutPage
-from hdf5viewer.gui.static_functions import file_size_to_str
 from hdf5viewer.gui.table_model import TableModel, DataTable
+from hdf5viewer.lib_h5.file_size import file_size_to_str
 
 
 class MainWindow(QMainWindow):

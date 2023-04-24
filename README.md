@@ -11,7 +11,7 @@ They are widely used in Academics to store large sets of raw data.
 This HDF5 File Viewer can open HDF5 Files and display all Groups and Datasets in the File.
 Datasets can be plotted to easily view the data.
 
-![Screenshot](img/screenshot.jpg)
+![Screenshot](src/hdf5viewer/img/screenshot.jpg)
 
 This project is a continuous work in progress, so feel free to contact me about any questions 
 or suggestions you might have.
