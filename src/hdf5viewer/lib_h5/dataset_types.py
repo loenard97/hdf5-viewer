@@ -11,11 +11,10 @@ class H5DatasetType(Enum):
 
     @classmethod
     def from_numpy_array(cls, array):
-        # print(array.dtype, len(array.shape), array.size)
         match array.dtype, len(array.shape), array.size:
             case arr_type, _, _ if str(arr_type).startswith("|S"):
                 return cls.String
-            case "int32" | "int64" | "float32" | "float64", 1, _:
+            case arr_type, 1, _ if "int" in str(arr_type) or "float" in str(arr_type):
                 return cls.Array1D
             case "int32" | "int64" | "float32" | "float64", 2, _:
                 return cls.Array2D
@@ -24,4 +23,4 @@ class H5DatasetType(Enum):
             case "int32" | "int64" | "float32" | "float64", 3, _:
                 return cls.ImageRGB
             case _:
-                return cls.Unknown
+                return cls.String

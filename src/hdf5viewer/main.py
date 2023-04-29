@@ -3,7 +3,7 @@ import argparse
 
 from PyQt6.QtWidgets import QApplication
 
-from hdf5viewer.cli.cli_server import parse_cli_args
+from hdf5viewer.cli.parse_cli_args import parse_cli_args
 from hdf5viewer.gui.main_window import MainWindow
 
 if sys.platform == "win32":

@@ -1,6 +1,6 @@
 import h5py
 
-from src.hdf5viewer.lib_h5.file_export import save_dataset_to_file
+from src.hdf5viewer.lib_h5.file_export import export_h5dataset
 
 
 def parse_cli_args(args):

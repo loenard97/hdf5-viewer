@@ -2,9 +2,10 @@ import os
 import h5py
 import numpy as np
 
+from hdf5viewer.lib_h5.dataset_types import H5DatasetType
 
-def save_file_to_file(in_path, out_path, file_type):
-    print(f"save file {in_path=}, {out_path=}")
+
+def export_h5file(in_path, out_path, file_type):
     os.makedirs(out_path, exist_ok=True)
 
     groups = []
@@ -17,16 +18,16 @@ def save_file_to_file(in_path, out_path, file_type):
                 datasets.append(name)
 
     for group in groups:
-        save_group_to_file(in_path, "", group, out_path, file_type)
+        export_h5group(in_path, "", group, out_path, file_type)
 
     for dataset in datasets:
-        save_dataset_to_file(in_path, "", dataset, out_path, file_type)
+        export_h5dataset(in_path, "", dataset, out_path, file_type)
 
 
-def save_group_to_file(in_path, parent_path, group_path, out_path, file_type):
-    print(f"save group {in_path=}, {group_path=}, {out_path=}")
+def export_h5group(in_path, parent_path, group_path, out_path, file_type):
     cur_path = '/'.join([parent_path, group_path])
-    os.makedirs(os.path.join(cur_path), exist_ok=True)
+    cur_path = cur_path.removeprefix('/')
+    os.makedirs(os.path.join(out_path, cur_path), exist_ok=True)
 
     groups = []
     datasets = []
@@ -38,13 +39,13 @@ def save_group_to_file(in_path, parent_path, group_path, out_path, file_type):
                 datasets.append(name)
 
     for group in groups:
-        save_group_to_file(in_path, cur_path, group, out_path, file_type)
+        export_h5group(in_path, cur_path, group, out_path, file_type)
 
     for dataset in datasets:
-        save_dataset_to_file(in_path, cur_path, dataset, out_path, file_type)
+        export_h5dataset(in_path, cur_path, dataset, out_path, file_type)
 
 
-def save_dataset_to_file(in_path, parent_path, dataset_path, out_path: str, file_type):
+def export_h5dataset(in_path, parent_path, dataset_path, out_path: str, file_type):
     """
     save dataset to file
     :param array: Dataset as numpy array
@@ -52,27 +53,53 @@ def save_dataset_to_file(in_path, parent_path, dataset_path, out_path: str, file
     """
     cur_path = '/'.join([parent_path, dataset_path])
     arr_path = os.path.join(out_path, *cur_path.split('/'))
-    print(f"save dataset {in_path=}, {parent_path=}, {dataset_path=}, {out_path=}, {cur_path=}, {arr_path=}")
 
     with h5py.File(in_path, 'r') as file:
         array = np.array(file[cur_path])
 
+    ds_type = H5DatasetType.from_numpy_array(array)
+
     if file_type == 'csv':
+
+        if ds_type == H5DatasetType.String:
+            with open(arr_path, 'w') as file_str:
+                try:
+                    for e in array:
+                        if isinstance(e, bytes):
+                            file_str.write(e.decode())
+                        elif isinstance(e, np.bool_):
+                            file_str.write(str(e))
+                        else:
+                            print("unknown")
+                except TypeError as err:
+                    print(f"skipping file write {arr_path}, {err}, {ds_type}, {array}")
+                    with open(arr_path, 'w') as err_file:
+                        err_file.write("Could not save this Dataset.")
+                else:
+                    return
+
         # np.savetxt(fname=arr_path, X=array, delimiter=',', newline='\n', fmt='%.0f')
         try:
-            np.savetxt(arr_path, array, delimiter=",", fmt='%d')
-        except BaseException:
-            print(f"skipping {arr_path}")
+            np.savetxt(arr_path, array, delimiter=",")
+        except BaseException as err:
+            print(f"skipping np.savetxt {arr_path}, {err}, {ds_type}, {array}")
+            with open(arr_path, 'w') as err_file:
+                err_file.write("Could not save this Dataset.")
 
     elif file_type == 'npy':
         np.save(file=arr_path, arr=array)
 
     else:
         print("unknown file type")
+        with open(arr_path, 'w') as err_file:
+            err_file.write("Could not save this Dataset.")
 
 
 def main():
-    save_file_to_file(r"E:\Projekte\Python\hdf5viewer\test.h5", r"E:\Projekte\Python\hdf5viewer\out", 'csv')
+    try:
+        export_h5file(r"E:\Projekte\Python\hdf5viewer\test.h5", r"E:\Projekte\Python\hdf5viewer\out", 'csv')
+    except OSError:
+        pass
 
 
 if __name__ == '__main__':

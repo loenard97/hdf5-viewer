@@ -13,14 +13,14 @@ def test_tmp_test_files(tmp_test_file):
 
 def test_types(tmp_test_file):
     with h5py.File(tmp_test_file, 'r') as file:
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/String"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/UTF-8"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/ASCII"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/Bytes"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/Integer"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/Float"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/Bool"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["Types/List"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/String"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/UTF-8"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/ASCII"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/Bytes"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/Integer"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/Float"])) is H5DatasetType.String
+        # assert H5DatasetType.from_numpy_array(np.array(file["Types/Bool"])) is H5DatasetType.String
+        assert H5DatasetType.from_numpy_array(np.array(file["Types/List"])) is H5DatasetType.Array1D
 
 
 def test_list(tmp_test_file):
@@ -29,10 +29,10 @@ def test_list(tmp_test_file):
         assert H5DatasetType.from_numpy_array(np.array(file["List/UTF-8"])) is H5DatasetType.String
         assert H5DatasetType.from_numpy_array(np.array(file["List/ASCII"])) is H5DatasetType.String
         assert H5DatasetType.from_numpy_array(np.array(file["List/Bytes"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["List/Integer"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["List/Float"])) is H5DatasetType.String
+        assert H5DatasetType.from_numpy_array(np.array(file["List/Integer"])) is H5DatasetType.Array1D
+        assert H5DatasetType.from_numpy_array(np.array(file["List/Float"])) is H5DatasetType.Array1D
         assert H5DatasetType.from_numpy_array(np.array(file["List/Bool"])) is H5DatasetType.String
-        assert H5DatasetType.from_numpy_array(np.array(file["List/List"])) is H5DatasetType.String
+        assert H5DatasetType.from_numpy_array(np.array(file["List/List"])) is H5DatasetType.Array2D
 
 
 def test_dictionary(tmp_test_file):

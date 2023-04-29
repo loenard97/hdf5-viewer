@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableVie
 
 from hdf5viewer.gui.about_page import AboutPage
 from hdf5viewer.gui.table_model import TableModel, DataTable
+from hdf5viewer.lib_h5.dataset_types import H5DatasetType
 from hdf5viewer.lib_h5.file_size import file_size_to_str
 
 
@@ -157,25 +158,27 @@ class MainWindow(QMainWindow):
 
         with h5py.File(self._curr_file, 'r') as file:
             data = np.array(file[self._curr_obj_path])
+        data_type = H5DatasetType.from_numpy_array(data)
 
         new_widget: QWidget | pg.ImageView
-        if str(data.dtype).startswith('|S'):
-            label = ''
-            for e in data:
-                label += e.decode() + '\n'
+        if data_type == H5DatasetType.String:
+            try:
+                label = '\n'.join([e.decode() for e in data])
+            except (TypeError, AttributeError):
+                label = "Could not cast to String"
             new_widget = QLabel(label)
-        elif data.dtype == np.dtype('float32') and len(data.shape) == 1:
+        elif data_type == H5DatasetType.Array1D:
             new_widget = pg.PlotWidget()
             new_widget.plot(data)
-        elif data.dtype == np.dtype('float32') and len(data.shape) == 2:
+        elif data_type == H5DatasetType.Array2D:
             new_widget = pg.ImageView()
             new_widget.setImage(data)
             new_widget.setColorMap(pg.colormap.get("inferno"))
-        elif data.dtype == np.dtype('float32') and len(data.shape) <= 2 and data.size < 100:
+        elif data_type == H5DatasetType.Table:
             new_widget = QTableView()
             model = DataTable(data)
             new_widget.setModel(model)
-        elif data.dtype == np.dtype('float32') and len(data.shape) == 3 and data.shape[0] == 3:
+        elif data_type == H5DatasetType.ImageRGB:
             data = np.sum(data, axis=0)
             new_widget = pg.ImageView()
             new_widget.setImage(data)

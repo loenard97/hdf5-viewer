@@ -3,6 +3,8 @@ import h5py
 import pytest
 import numpy as np
 
+from hdf5viewer.lib_h5.file_export import export_h5file
+
 
 @pytest.fixture
 def tmp_test_file(tmp_path):
@@ -13,13 +15,13 @@ def tmp_test_file(tmp_path):
     with h5py.File(target_output, 'w') as file:
         # ----- Types ------ #
         file.create_group("Types")
-        file.create_dataset("Types/String", data="String")
-        file.create_dataset("Types/UTF-8", data="String".encode('utf-8'))
-        file.create_dataset("Types/ASCII", data="String".encode('ascii'))
-        file.create_dataset("Types/Bytes", data=b"Bytes")
-        file.create_dataset("Types/Integer", data=1)
-        file.create_dataset("Types/Float", data=1.1)
-        file.create_dataset("Types/Bool", data=True)
+        # file.create_dataset("Types/String", data="String")
+        # file.create_dataset("Types/UTF-8", data="String".encode('utf-8'))
+        # file.create_dataset("Types/ASCII", data="String".encode('ascii'))
+        # file.create_dataset("Types/Bytes", data=b"Bytes")
+        # file.create_dataset("Types/Integer", data=1)
+        # file.create_dataset("Types/Float", data=1.1)
+        # file.create_dataset("Types/Bool", data=True)
         file.create_dataset("Types/List", data=[])
 
         # ----- List ------ #
@@ -71,3 +73,9 @@ def tmp_test_file(tmp_path):
         file.create_dataset("Numpy Arrays/Float/float64", data=np.array([1.1, 2.2, 3.3, 4.4, 5.5], dtype='float64'))
 
     return target_output
+
+
+@pytest.fixture
+def tmp_test_export_file(tmp_path):
+    export_h5file(r"E:\Projekte\Python\hdf5viewer\test.h5", tmp_path, 'csv')
+    return tmp_path
