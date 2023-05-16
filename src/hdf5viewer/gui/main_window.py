@@ -1,5 +1,4 @@
 import os
-import sys
 import h5py
 import numpy as np
 import pyqtgraph as pg
@@ -7,10 +6,12 @@ import pyqtgraph as pg
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QTreeWidgetItem, QTableView, QFormLayout, QWidget, QVBoxLayout, \
-    QHBoxLayout, QLabel, QTreeWidget, QMessageBox
+    QHBoxLayout, QTreeWidget, QTextBrowser
 
 from hdf5viewer.gui.about_page import AboutPage
+from hdf5viewer.gui.export_window import ExportWindow
 from hdf5viewer.gui.table_model import TableModel, DataTable
+from hdf5viewer.img.img_path import img_path
 from hdf5viewer.lib_h5.dataset_types import H5DatasetType
 from hdf5viewer.lib_h5.file_size import file_size_to_str
 
@@ -24,11 +25,7 @@ class MainWindow(QMainWindow):
         # Variables
         self._curr_file = ''
         self._curr_obj_path = ''
-        if getattr(sys, 'frozen', False):
-            application_path = os.path.dirname(sys.executable)
-        else:
-            application_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self._icon_dir = os.path.join(application_path, "img")
+        self._icon_dir = img_path()
 
         # Appearance
         self.setMinimumSize(1400, 700)
@@ -99,13 +96,18 @@ class MainWindow(QMainWindow):
         action_about.triggered.connect(self._handle_action_about)    # NOQA
         help_menu.addAction(action_about)
 
-        # Open File when double-clicking on it
+        # Open File when double-clicking
         if init_file_path:
             self._open_file(init_file_path)
+
+    @property
+    def selected_item(self):
+        return self._curr_file, self._curr_obj_path
 
     def _open_file(self, file_path):
         """
         Open one File
+        :param str file_path: File Path
         """
         try:
             # Load TreeView from File
@@ -122,6 +124,7 @@ class MainWindow(QMainWindow):
     def _tree_recursion(self, item, path):
         """
         Get Array of all Parents
+        :param QTreeWidgetItem item:
         """
         try:
             path.append(item.parent().text(0))
@@ -160,13 +163,14 @@ class MainWindow(QMainWindow):
             data = np.array(file[self._curr_obj_path])
         data_type = H5DatasetType.from_numpy_array(data)
 
-        new_widget: QWidget | pg.ImageView
+        new_widget: QTextBrowser | pg.PlotWidget | pg.ImageView | QTableView | QWidget
         if data_type == H5DatasetType.String:
             try:
                 label = '\n'.join([e.decode() for e in data])
             except (TypeError, AttributeError):
                 label = "Could not cast to String"
-            new_widget = QLabel(label)
+            new_widget = QTextBrowser()
+            new_widget.setText(label)
         elif data_type == H5DatasetType.Array1D:
             new_widget = pg.PlotWidget()
             new_widget.plot(data)
@@ -192,7 +196,7 @@ class MainWindow(QMainWindow):
         self._plot_widget.destroy()
         self._plot_widget = new_widget
 
-    # ----- Drag & Drop -----
+    # ----- Drag & Drop ----- #
     def dragEnterEvent(self, event: QDragEnterEvent):
         """
         Accept Drag Events for h5 and hdf5 files to initiate Drag & Drop Events
@@ -212,7 +216,7 @@ class MainWindow(QMainWindow):
             self._open_file(file[8:])
         event.acceptProposedAction()
 
-    # ----- Slots -----
+    # ----- Slots ----- #
     @pyqtSlot(QTreeWidgetItem, QTreeWidgetItem)
     def _handle_item_changed(self, current, _):
         """
@@ -288,35 +292,16 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def _handle_action_export(self):
         """
-        Export selected Dataset
+        Export selected Item
         """
-        # Get Dataset
-        try:
-            with h5py.File(self._curr_file, 'r') as h5_file:
-                dataset = np.array(h5_file[self._curr_obj_path])
-        except (ValueError, TypeError):
-            QMessageBox.information(
-                self, "Nothing selected", "Please select a File, Group or Dataset you want to export.")
-            return
-
-        # Get File Path
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, "Export Dataset", os.path.expanduser('~'), "CSV File (*.csv);;Numpy File (*.npy);;All Files (*.*)")
-
-        # Save File
-        file_type = file_path.split('.')[-1]
-        if file_type == 'csv':
-            np.savetxt(fname=file_path, X=dataset, delimiter=',', newline='\n', fmt='%.0f')
-
-        elif file_type == 'npy':
-            np.save(file=file_path, arr=dataset)
+        self._export_window = ExportWindow(main_window=self)
 
     @pyqtSlot()
     def _handle_action_about(self):
         """
         Open About Page
         """
-        self.about_page = AboutPage()
+        self._about_page = AboutPage()
 
     @pyqtSlot()
     def _handle_close(self):

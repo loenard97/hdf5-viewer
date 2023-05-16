@@ -6,6 +6,12 @@ from hdf5viewer.lib_h5.dataset_types import H5DatasetType
 
 
 def export_h5file(in_path, out_path, file_type):
+    """
+    Export HDF5 File
+    :param str in_path: h5 file path
+    :param str out_path: export path
+    :param str file_type: export file type
+    """
     os.makedirs(out_path, exist_ok=True)
 
     groups = []
@@ -25,8 +31,15 @@ def export_h5file(in_path, out_path, file_type):
 
 
 def export_h5group(in_path, parent_path, group_path, out_path, file_type):
-    cur_path = '/'.join([parent_path, group_path])
-    cur_path = cur_path.removeprefix('/')
+    """
+    Export HDF5 Group
+    :param str in_path: h5 file path
+    :param str parent_path: path to parent object
+    :param str group_path: path to group
+    :param str out_path: export path
+    :param str file_type: export file type
+    """
+    cur_path = '/'.join([parent_path, group_path]).removeprefix('/')
     os.makedirs(os.path.join(out_path, cur_path), exist_ok=True)
 
     groups = []
@@ -45,11 +58,14 @@ def export_h5group(in_path, parent_path, group_path, out_path, file_type):
         export_h5dataset(in_path, cur_path, dataset, out_path, file_type)
 
 
-def export_h5dataset(in_path, parent_path, dataset_path, out_path: str, file_type):
+def export_h5dataset(in_path, parent_path, dataset_path, out_path, file_type):
     """
-    save dataset to file
-    :param array: Dataset as numpy array
-    :param str file_path: save file path
+    Export HDF5 Group
+    :param str in_path: h5 file path
+    :param str parent_path: path to parent object
+    :param str dataset_path: path to dataset
+    :param str out_path: export path
+    :param str file_type: export file type
     """
     cur_path = '/'.join([parent_path, dataset_path])
     arr_path = os.path.join(out_path, *cur_path.split('/'))
@@ -60,7 +76,6 @@ def export_h5dataset(in_path, parent_path, dataset_path, out_path: str, file_typ
     ds_type = H5DatasetType.from_numpy_array(array)
 
     if file_type == 'csv':
-
         if ds_type == H5DatasetType.String:
             with open(arr_path, 'w') as file_str:
                 try:

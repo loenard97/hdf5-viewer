@@ -19,9 +19,12 @@ def main():
     )
     parser.add_argument("filename", help="H5 file to load", nargs='?', default='')
     parser.add_argument("-e", "--export", help="Export H5 File to output file")
+    parser.add_argument("-l", "--list", help="List all Groups and Datasets", action="store_true")
+    parser.add_argument("-t", "--tree", help="List all Groups and Datasets recursively as tree", action="store_true")
+    parser.add_argument("-p", "--plain", help="Disable pretty printing", action="store_true")
     args = parser.parse_args()
 
-    if args.export is not None:
+    if args.export is not None or any([args.list, args.tree]):
         parse_cli_args(args)
     else:
         app = QApplication(sys.argv)
