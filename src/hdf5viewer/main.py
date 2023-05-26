@@ -1,4 +1,5 @@
 import sys
+import logging
 import argparse
 
 from PyQt6.QtWidgets import QApplication
@@ -13,6 +14,8 @@ if sys.platform == "win32":
 
 
 def main():
+    logging.basicConfig(level=0, format="%(asctime)s: [%(levelname)s] - %(message)s")
+
     parser = argparse.ArgumentParser(
         prog="HDF5 File Viewer",
         description="A File Viewer for HDF5 Files.",
@@ -27,7 +30,10 @@ def main():
     if args.export is not None or any([args.list, args.tree]):
         parse_cli_args(args)
     else:
+        logging.info('Starting as gui')
         app = QApplication(sys.argv)
+        app.setOrganizationName("HDF5Viewer")
+        app.setApplicationName("HDF5ViewerPython")
         main_win = MainWindow(init_file_path=args.filename)
         main_win.show()
         sys.exit(app.exec())

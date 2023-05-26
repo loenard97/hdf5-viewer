@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtCore import pyqtSlot, QSettings
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QMessageBox, QFileDialog, QFormLayout, QLabel, QPushButton, \
     QHBoxLayout
@@ -27,7 +27,8 @@ class ExportWindow(QWidget):
         self.setMinimumSize(700, 500)
         self.setWindowIcon(QIcon(icon_path))
 
-        self._out_path = ''
+        settings = QSettings()
+        self._out_path = settings.value('export_path', '')
 
         print(f"{main_window.selected_item=}")
 
@@ -39,6 +40,7 @@ class ExportWindow(QWidget):
         lyt_settings = QFormLayout()
         lyt_settings.addWidget(QLabel(f"{main_window.selected_item}"))
         lyt_settings.addRow(QLabel("Selected File"), QLabel(f"{main_window.selected_item[0]}"))
+        lyt_settings.addRow(QLabel("Selected Item"), QLabel(f"{main_window.selected_item[1]}"))
         lyt_out_path = QHBoxLayout()
         lbl_out_path = QLabel(self._out_path)
         lyt_out_path.addWidget(lbl_out_path)
@@ -65,7 +67,14 @@ class ExportWindow(QWidget):
 
     @pyqtSlot()
     def _handle_btn_export(self):
-        export_h5file(in_path=self._main_window.selected_item[0], out_path=str(pathlib.Path(__file__)), file_type="csv")
+        if os.path.exists(self._out_path):
+            QMessageBox.question(
+                self, 'Overwrite',
+                f'The path {self._out_path} already exists. Do you want to overwrite existing files?',
+                buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
+            )
+        export_h5file(in_path=self._main_window.selected_item[0], out_path=self._out_path, file_type="csv")
+        QMessageBox.information(self, 'Export', f'Finished exporting to {self._out_path}')
 
     @pyqtSlot()
     def _handle_btn_cancel(self):
@@ -73,5 +82,7 @@ class ExportWindow(QWidget):
 
     @pyqtSlot()
     def _handle_btn_folder(self):
-        file_path, _ = QFileDialog.getSaveFileName(
+        self._out_path, _ = QFileDialog.getSaveFileName(
             self, "Export Dataset", os.path.expanduser('~'), "CSV File (*.csv);;Numpy File (*.npy);;All Files (*.*)")
+        settings = QSettings()
+        settings.setValue('export_path', self._out_path)

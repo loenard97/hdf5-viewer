@@ -1,4 +1,7 @@
 def color(string, cli_color) -> str:
+    """
+    Wrap string in color code characters
+    """
     match cli_color:
         case "normal": color_code = "\x1b[0m"
         case "black": color_code = "\x1b[30m"

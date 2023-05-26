@@ -1,39 +1,68 @@
+<div align="center">
+
 # HDF5 File Viewer
+A python based file viewer for HDF5 files
 
-![Tests](https://github.com/loenard97/hdf5-viewer/actions/workflows/tests.yml/badge.svg)
+![last commit](https://img.shields.io/github/last-commit/loenard97/hdf5-viewer?&style=for-the-badge&logo=github&color=3776AB)
+![repo size](https://img.shields.io/github/repo-size/loenard97/hdf5-viewer?&style=for-the-badge&logo=github&color=3776AB)
 
-A Python Application to view HDF5 Files.
+</div>
 
-HDF5 Files are developed by the [HDF5 Group](https://www.hdfgroup.org/solutions/hdf5/).
+
+HDF5 Files are developed by the [HDF Group](https://www.hdfgroup.org/solutions/hdf5/).
 Each File can contain Groups that work similarly to folders and Datasets that represent raw data.
-They are widely used in Academics to store large sets of raw data.
+They are widely used in Industry and Academia to store large sets of raw data.
 
-This HDF5 File Viewer can open HDF5 Files and display all Groups and Datasets in the File.
-Datasets can be plotted to easily view the data.
 
+## 📋 Features
+ - Files can be opened in a GUI or with a CLI
+ - Load h5 files to view all groups and datasets
+ - Also supports remote files on a NAS for example
+ - Display datasets as graphs or text
+ - Export files to various other file formats
+
+
+## ▶️ GUI Mode
+Files can be opened in a GUI either by double-clicking, drag-and-drop or via the File menu.
 ![Screenshot](src/hdf5viewer/img/screenshot.jpg)
 
-This project is a continuous work in progress, so feel free to contact me about any questions 
-or suggestions you might have.
+
+## ▶️ CLI Mode
+A command line interface provides easy access to the file contents for scripting.
+Use `hdf5viewer --help` to see all available options.
+
+```sh
+$ ./hdf5viewer -t test.h5
+──────────────────────────────────
+  File: test.h5
+──────────────────────────────────
+  ├─ Arrays
+  │  ├─ Float
+  │  ├─ Integer
+  ├─ Numpy Arrays
+  │  ├─ Float
+  │  │  ├─ float16
+  │  │  ├─ float32
+  │  │  └─ float64
+```
 
 
-## Installation
+## ▶️ Installation
 ### Windows
-Simply download and execute the HDF5Viewer_Windows_Installer_*version*.exe 
+Simply download and execute the `HDF5Viewer_Windows_Installer_*version*.exe` 
 from the [Releases](https://github.com/loenard97/hdf5-viewer/releases) page 
 and follow the instructions.
 
 ### Debian-like Linux Distros
-Download the hdf5viewer_*version*_all.deb package from the 
+Download the `hdf5viewer_*version*_all.deb` package from the 
 [Releases](https://github.com/loenard97/hdf5-viewer/releases) page.
 
 Open a Terminal in the Download Folder and install the package with
 ```commandline
 sudo apt install ./hdf5viewer_*version*_all.deb
 ```
-This will install the program in ```/usr/bin/hdf5viewer/hdf5viewer```.
+This will install the program in `/usr/bin/hdf5viewer/hdf5viewer`.
 You will have to manually create a desktop shortcut and associate file extensions with the program.
-(I couldn't figure out how to do this automatically. Maybe I'll do that in the future.)
 
 
 ### Building binaries from source
@@ -51,7 +80,7 @@ python3 -m venv venv
 ./venv/bin/python3 hdf5viewer.py
 ```
 
-## Acknowledgements and Licenses
+## 🔗 Acknowledgements and Licenses
 The following Python libraries are used in this project:
  - [PyQt6](https://riverbankcomputing.com/commercial/pyqt)
  - [h5py](https://docs.h5py.org/en/stable/licenses.html)
