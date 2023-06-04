@@ -1,6 +1,6 @@
-import logging
 import os
 import h5py
+import logging
 import numpy as np
 import pyqtgraph as pg
 
@@ -106,7 +106,16 @@ class MainWindow(QMainWindow):
 
     @property
     def selected_item(self):
-        return self._cur_file, self._cur_obj_path
+        """
+        Tuple of selected file name, object name and object type
+        """
+        if not self._cur_obj_path:
+            obj_type = h5py.File
+        else:
+            with h5py.File(self._cur_file, 'r') as file:
+                obj_type = type(file[self._cur_obj_path])
+
+        return self._cur_file, self._cur_obj_path, obj_type
 
     def _open_file(self, file_path):
         """
@@ -163,7 +172,7 @@ class MainWindow(QMainWindow):
         Update Plot Widget
         :param str plot_type: Plot Type
         """
-        logging.info(f"Plot dataset as '{plot_type}'")
+        # logging.info(f"Plot dataset as '{plot_type}'")
         if self._cur_file is None or not self._cur_obj_path or not os.path.exists(self._cur_file):
             return
 

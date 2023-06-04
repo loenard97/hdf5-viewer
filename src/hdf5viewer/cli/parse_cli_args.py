@@ -19,13 +19,14 @@ def parse_cli_args(args):
         print(list_file_items(args.filename, args.plain))
 
     elif args.export:
-        print("Not implemented")
+        print(f"{color('Application error', 'red')}: Exporting is not implemented yet")
 
 
 def list_file_items(in_path: str, plain: bool) -> str:
     """
-    List items in file
+    List items in file as list
     """
+    # TODO: reformat as table
     ret = []
     if not plain:
         ret.append("─" * os.get_terminal_size()[0])
@@ -44,6 +45,9 @@ def list_file_items(in_path: str, plain: bool) -> str:
 
 
 def list_tree_file_items(in_path: str, plain: bool) -> str:
+    """
+    List items in file as tree recursively
+    """
     ret = []
     if not plain:
         ret.append("─" * os.get_terminal_size()[0])

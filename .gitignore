@@ -20,4 +20,5 @@
 *.npy
 *.png
 *.coverage
+*.log
 test.py

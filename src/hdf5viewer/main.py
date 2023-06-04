@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 import argparse
@@ -14,8 +15,6 @@ if sys.platform == "win32":
 
 
 def main():
-    logging.basicConfig(level=0, format="%(asctime)s: [%(levelname)s] - %(message)s")
-
     parser = argparse.ArgumentParser(
         prog="HDF5 File Viewer",
         description="A File Viewer for HDF5 Files.",
@@ -25,7 +24,26 @@ def main():
     parser.add_argument("-l", "--list", help="List all Groups and Datasets", action="store_true")
     parser.add_argument("-t", "--tree", help="List all Groups and Datasets recursively as tree", action="store_true")
     parser.add_argument("-p", "--plain", help="Disable pretty printing", action="store_true")
+    parser.add_argument("-d", "--debug", help="Enable debug logging", action="store_true")
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(
+            level=0,
+            format="%(asctime)s: [%(levelname)s] - %(message)s",
+            handlers=[
+                logging.FileHandler(os.path.join("hdf5viewer.log")),
+                logging.StreamHandler(sys.stdout),
+            ],
+            force=True,
+        )
+    else:
+        logging.basicConfig(
+            level=20,
+            format="%(asctime)s: [%(levelname)s] - %(message)s",
+            handlers=[logging.StreamHandler(sys.stdout)],
+            force=True,
+        )
 
     if args.export is not None or any([args.list, args.tree]):
         parse_cli_args(args)

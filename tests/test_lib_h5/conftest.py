@@ -1,9 +1,10 @@
 import os
 import h5py
 import pytest
+import pathlib
 import numpy as np
 
-from hdf5viewer.lib_h5.file_export import export_h5file
+from hdf5viewer.lib_h5.file_export import export_file
 
 
 @pytest.fixture
@@ -77,5 +78,5 @@ def tmp_test_file(tmp_path):
 
 @pytest.fixture
 def tmp_test_export_file(tmp_path):
-    export_h5file(r"E:\Projekte\Python\hdf5viewer\test.h5", tmp_path, 'csv')
+    export_file(pathlib.Path(r"E:\Projekte\Python\hdf5viewer\test.h5"), pathlib.Path(tmp_path), 'csv')
     return tmp_path

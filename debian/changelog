@@ -1,8 +1,5 @@
-hdf5viewer (1.2) UNRELEASED; urgency=low
+hdf5viewer (0.1.0) UNRELEASED; urgency=low
 
-  * Plots are automatically chosen depending on Dataset Type and Size
-    Added About Page
-    New Icons
+  *
 
-
- -- dennis <dennis@dennis-laptop>  Thu, 24 Nov 2022 13:40:03 +0100
+ -- dennis <dennis.loenard97@gmx.de>  Thu, 24 Nov 2022 13:40:03 +0100

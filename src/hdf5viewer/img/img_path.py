@@ -1,5 +1,6 @@
 import sys
 import pathlib
+import logging
 
 
 def img_path() -> pathlib.Path:
@@ -7,5 +8,11 @@ def img_path() -> pathlib.Path:
     Get path to img directory
     """
     if getattr(sys, 'frozen', False):
-        return pathlib.Path(sys.executable, "img")
-    return pathlib.Path(__file__).absolute().parent
+        path = pathlib.Path(sys.executable).parent
+        path = pathlib.Path(path, "img")
+    else:
+        path = pathlib.Path(__file__).absolute().parent
+
+    logging.info(f"Image path '{path}'")
+
+    return path

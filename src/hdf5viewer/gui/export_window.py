@@ -1,13 +1,14 @@
 import os
 import pathlib
 
+import h5py
 from PyQt6.QtCore import pyqtSlot, QSettings
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QMessageBox, QFileDialog, QFormLayout, QLabel, QPushButton, \
-    QHBoxLayout
+    QHBoxLayout, QComboBox
 
 from hdf5viewer.img.img_path import img_path
-from hdf5viewer.lib_h5.file_export import export_h5file
+from hdf5viewer.lib_h5.file_export import export_dataset, export_file, export_group
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -24,13 +25,11 @@ class ExportWindow(QWidget):
 
         icon_path = str(pathlib.Path(img_path(), "export.svg").absolute())
         self.setWindowTitle("Export Item")
-        self.setMinimumSize(700, 500)
+        # self.setMinimumSize(700, 500)
         self.setWindowIcon(QIcon(icon_path))
 
         settings = QSettings()
         self._out_path = settings.value('export_path', '')
-
-        print(f"{main_window.selected_item=}")
 
         if main_window.selected_item is None:
             QMessageBox.information(
@@ -38,16 +37,11 @@ class ExportWindow(QWidget):
             return
 
         lyt_settings = QFormLayout()
-        lyt_settings.addWidget(QLabel(f"{main_window.selected_item}"))
         lyt_settings.addRow(QLabel("Selected File"), QLabel(f"{main_window.selected_item[0]}"))
         lyt_settings.addRow(QLabel("Selected Item"), QLabel(f"{main_window.selected_item[1]}"))
-        lyt_out_path = QHBoxLayout()
-        lbl_out_path = QLabel(self._out_path)
-        lyt_out_path.addWidget(lbl_out_path)
-        btn_out_path = QPushButton("Choose out path")
-        btn_out_path.clicked.connect(self._handle_btn_folder)
-        lyt_out_path.addWidget(btn_out_path)
-        lyt_settings.addRow("Output File Path", lyt_out_path)
+        self._cb_file_type = QComboBox()
+        self._cb_file_type.addItems(['csv', 'npy'])
+        lyt_settings.addRow(QLabel('File Type'), self._cb_file_type)
 
         lyt_buttons = QHBoxLayout()
         btn_export = QPushButton("Export")
@@ -67,22 +61,44 @@ class ExportWindow(QWidget):
 
     @pyqtSlot()
     def _handle_btn_export(self):
+        h5file_path, h5obj_path, h5obj_type = self._main_window.selected_item
+
+        if h5obj_type == h5py.Dataset:
+            self._out_path, _ = QFileDialog.getSaveFileName(
+                self, "Export Dataset", os.path.expanduser('~'),
+                "CSV File (*.csv);;Numpy File (*.npy);;All Files (*.*)"
+            )
+        else:
+            self._out_path = QFileDialog.getExistingDirectory(
+                self, 'Export Group', os.path.expanduser('~')
+            )
+
+        settings = QSettings()
+        settings.setValue('export_path', self._out_path)
+
         if os.path.exists(self._out_path):
-            QMessageBox.question(
+            if QMessageBox.question(
                 self, 'Overwrite',
                 f'The path {self._out_path} already exists. Do you want to overwrite existing files?',
                 buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel
-            )
-        export_h5file(in_path=self._main_window.selected_item[0], out_path=self._out_path, file_type="csv")
-        QMessageBox.information(self, 'Export', f'Finished exporting to {self._out_path}')
+            ) == QMessageBox.StandardButton.Cancel:
+                return
+
+        if h5obj_type == h5py.File:
+            export_file(
+                input_file=h5file_path, output_file=pathlib.Path(self._out_path),
+                save_as_type=self._cb_file_type.currentText())
+        elif h5obj_type == h5py.Group:
+            export_group(
+                input_file=h5file_path, group=h5obj_path, output_file=pathlib.Path(self._out_path),
+                save_as_type=self._cb_file_type.currentText())
+        else:
+            export_dataset(
+                input_file=h5file_path, dataset=h5obj_path, output_file=pathlib.Path(self._out_path),
+                save_as_type=self._cb_file_type.currentText())
+
+        self.close()
 
     @pyqtSlot()
     def _handle_btn_cancel(self):
         self.close()
-
-    @pyqtSlot()
-    def _handle_btn_folder(self):
-        self._out_path, _ = QFileDialog.getSaveFileName(
-            self, "Export Dataset", os.path.expanduser('~'), "CSV File (*.csv);;Numpy File (*.npy);;All Files (*.*)")
-        settings = QSettings()
-        settings.setValue('export_path', self._out_path)
