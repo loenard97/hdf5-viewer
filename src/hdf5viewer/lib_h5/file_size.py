@@ -1,10 +1,10 @@
+"""File size formatting util."""
+
 import os
 
 
 def file_size_to_str(file_path: str) -> str:
-    """
-    Get formatted File Size
-    """
+    """Get formatted file size."""
     size = os.path.getsize(file_path)
 
     if size > 1024**3:

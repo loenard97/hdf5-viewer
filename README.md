@@ -76,8 +76,10 @@ For all other Linux Distros you will have to download the Source Code and build 
 I suggest creating a Python Virtual Environment:
 ```commandline
 python3 -m venv venv
-./venv/bin/python3 -m pip install requirements.txt
-./venv/bin/python3 hdf5viewer.py
+source venv/bin/activate
+pip install requirements.txt
+pip install -e .
+python hdf5viewer.py
 ```
 
 ## 🔗 Acknowledgements and Licenses

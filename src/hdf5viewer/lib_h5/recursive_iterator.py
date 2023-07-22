@@ -1,9 +1,13 @@
+"""Recursive iterators for files and groups."""
+import pathlib
+
 import h5py
 
 
-def recursive_h5(file_path):
+def recursive_h5(file_path: pathlib.Path) -> list[tuple[str, int, bool]]:
+    """Iterate recursively through file."""
     item_list = []
-    with h5py.File(file_path, 'r') as file:
+    with h5py.File(file_path, "r") as file:
         for i, (name, obj) in enumerate(file.items()):
             is_last = i == len(file) - 1
             if str(type(obj)) == "<class 'h5py._hl.group.Group'>":
@@ -17,14 +21,17 @@ def recursive_h5(file_path):
     return item_list
 
 
-def recursive_group(file_path, group, depth):
+def recursive_group(
+    file_path: pathlib.Path, group: str, depth: int
+) -> list[tuple[str, int, bool]]:
+    """Iterate recursively through group."""
     item_list = []
-    with h5py.File(file_path, 'r') as file:
+    with h5py.File(file_path, "r") as file:
         for i, (name, obj) in enumerate(file[group].items()):
             is_last = i == len(file[group]) - 1
             if str(type(obj)) == "<class 'h5py._hl.group.Group'>":
                 item_list.append((name, depth, is_last))
-                for e in recursive_group(file_path, f"{group}/{name}", depth+1):
+                for e in recursive_group(file_path, f"{group}/{name}", depth + 1):
                     item_list.append(e)
 
             elif str(type(obj)) == "<class 'h5py._hl.dataset.Dataset'>":

@@ -1,13 +1,13 @@
-import sys
-import pathlib
 import logging
+import pathlib
+import sys
 
 
 def img_path() -> pathlib.Path:
     """
     Get path to img directory
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         path = pathlib.Path(sys.executable).parent
         path = pathlib.Path(path, "img")
     else:

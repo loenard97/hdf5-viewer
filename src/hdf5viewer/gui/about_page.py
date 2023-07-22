@@ -1,17 +1,19 @@
+"""About Page rendered with html/about_page.html text."""
+
 import os
 import sys
 
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextBrowser
+from PyQt6.QtWidgets import QTextBrowser, QVBoxLayout, QWidget
 
 
 class AboutPage(QWidget):
-    """
-    About Page rendered with html/about_page.html text
-    """
-    def __init__(self):
+    """About Page rendered with html/about_page.html text."""
+
+    def __init__(self) -> None:
+        """About Page rendered with html/about_page.html text."""
         super().__init__()
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             self._file_dir = os.path.dirname(sys.executable)
         else:
             self._file_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

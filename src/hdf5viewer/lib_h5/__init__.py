@@ -1,3 +1,1 @@
-"""
-H5 File related functions and types
-"""
+"""H5 File related functions and types."""

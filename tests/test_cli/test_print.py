@@ -1,10 +1,15 @@
+"""Test cli output."""
+
 import os
+import pathlib
+
 import pytest
 
 # from hdf5viewer.cli.parse_cli_args import list_file_items
 
 
-def test_tmp_test_files(tmp_test_file):
+def test_tmp_test_files(tmp_test_file: pathlib.Path) -> None:
+    """Test temp files."""
     if not os.path.exists(tmp_test_file):
         pytest.exit("Temporary h5file does not exist")
 
