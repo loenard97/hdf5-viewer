@@ -23,5 +23,6 @@ jobs:
         run: | 
           python -m pip install --upgrade pip
           pip install tox tox-gh-actions
+          pip install -e git+https://github.com/loenard97/hdf5-viewer
       - name: Test with tox
         run: tox

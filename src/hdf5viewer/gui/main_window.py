@@ -1,5 +1,20 @@
 """Main Window of the GUI."""
 
+# Copyright (C) 2023 Dennis Lönard
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import logging
 import os
 import pathlib
@@ -8,7 +23,8 @@ from typing import Any
 import h5py
 import numpy as np
 import pyqtgraph as pg
-from PyQt6.QtCore import Qt, pyqtSlot
+from PyQt6 import QtGui
+from PyQt6.QtCore import QPoint, QSettings, QSize, Qt, pyqtSlot
 from PyQt6.QtGui import QAction, QDragEnterEvent, QDropEvent, QIcon
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -26,6 +42,7 @@ from PyQt6.QtWidgets import (
 
 from hdf5viewer.gui.about_page import AboutPage
 from hdf5viewer.gui.export_window import ExportWindow
+from hdf5viewer.gui.settings_window import SettingsWindow
 from hdf5viewer.gui.table_model import DataTable, TableModel
 from hdf5viewer.img.img_path import img_path
 from hdf5viewer.lib_h5.dataset_types import H5DatasetType
@@ -35,7 +52,7 @@ from hdf5viewer.lib_h5.file_size import file_size_to_str
 class MainWindow(QMainWindow):
     """Start Main Window of the GUI."""
 
-    def __init__(self, init_file_path: str) -> None:
+    def __init__(self, init_file_path: pathlib.Path) -> None:
         """Start Main Window of the GUI."""
         super().__init__(flags=Qt.WindowType.Window)
         self.setAcceptDrops(True)
@@ -46,9 +63,12 @@ class MainWindow(QMainWindow):
         self._icon_dir = img_path()
 
         # Appearance
+        settings = QSettings()
         self.setMinimumSize(1400, 700)
         self.setWindowTitle("HDF5 Viewer")
-        self.setWindowIcon(QIcon(os.path.join(self._icon_dir, "file.svg")))
+        self.resize(settings.value("main_window/size", defaultValue=QSize(1400, 700)))
+        self.move(settings.value("main_window/position", defaultValue=QPoint(300, 150)))
+        self.setWindowIcon(QIcon(str(pathlib.Path(self._icon_dir, "file.svg"))))
 
         # Layout Right Side
         self._tm_dataset = TableModel(header=["Attribute", "Value"])
@@ -87,21 +107,29 @@ class MainWindow(QMainWindow):
         # File Menu
         mbr_file = self.menuBar().addMenu("&File")
         act_file = QAction("&Open File...", self)
-        act_file.setIcon(QIcon(os.path.join(self._icon_dir, "file.svg")))
+        act_file.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "file.svg"))))
         act_file.setShortcut("Ctrl+O")
         act_file.triggered.connect(self._handle_action_open_file)  # NOQA
         mbr_file.addAction(act_file)
         act_open_folder = QAction("&Open Folder...", self)
-        act_open_folder.setIcon(QIcon(os.path.join(self._icon_dir, "group.svg")))
+        act_open_folder.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "group.svg"))))
         act_open_folder.triggered.connect(self._handle_action_open_folder)  # NOQA
         mbr_file.addAction(act_open_folder)
         act_clear_files = QAction("&Clear all Files", self)
-        act_clear_files.setIcon(QIcon(os.path.join(self._icon_dir, "file_clear.svg")))
+        act_clear_files.setIcon(
+            QIcon(str(pathlib.Path(self._icon_dir, "file_clear.svg")))
+        )
         act_clear_files.triggered.connect(self._handle_action_clear_files)  # NOQA
         mbr_file.addAction(act_clear_files)
         mbr_file.addSeparator()
+        act_settings = QAction("&Settings...", self)
+        act_settings.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "settings.svg"))))
+        act_settings.setShortcut("Ctrl+Shift+S")
+        act_settings.triggered.connect(self._handle_action_open_settings)  # NOQA
+        mbr_file.addAction(act_settings)
+        mbr_file.addSeparator()
         act_quit = QAction("&Quit", self)
-        act_quit.setIcon(QIcon(os.path.join(self._icon_dir, "quit.svg")))
+        act_quit.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "quit.svg"))))
         act_quit.setShortcut("Ctrl+Q")
         act_quit.triggered.connect(self._handle_close)  # NOQA
         mbr_file.addAction(act_quit)
@@ -125,6 +153,16 @@ class MainWindow(QMainWindow):
         if init_file_path:
             self._open_file(init_file_path)
 
+        # Open last opened files again
+        if (
+            settings.value(
+                "settings/reopen_files_on_startup", defaultValue=Qt.CheckState.Unchecked
+            )
+            == Qt.CheckState.Checked
+        ):
+            for file in settings.value("settings/last_opened_files", defaultValue=()):
+                self._open_file(file)
+
     @property
     def selected_item(self) -> tuple[pathlib.Path, str, Any]:
         """Tuple of selected file name, object name and object type."""
@@ -136,7 +174,15 @@ class MainWindow(QMainWindow):
 
         return self._cur_file, self._cur_obj_path, obj_type
 
-    def _open_file(self, file_path: str) -> None:
+    @property
+    def opened_files(self) -> tuple[pathlib.Path, ...]:
+        """Currently opened files."""
+        file_paths = []
+        for i in range(self._tw_file.topLevelItemCount()):
+            file_paths.append(pathlib.Path(self._tw_file.topLevelItem(i).text(0)))
+        return tuple(file_paths)
+
+    def _open_file(self, file_path: pathlib.Path) -> None:
         """
         Open one File.
 
@@ -147,9 +193,11 @@ class MainWindow(QMainWindow):
             # Load TreeView from File
             with h5py.File(file_path, "r") as file:
                 parent_item = QTreeWidgetItem()
-                parent_item.setText(0, file_path)
+                parent_item.setText(0, str(file_path))
                 parent_item.setText(1, "HDF5 File")
-                parent_item.setIcon(1, QIcon(os.path.join(self._icon_dir, "file.svg")))
+                parent_item.setIcon(
+                    1, QIcon(str(pathlib.Path(self._icon_dir, "file.svg")))
+                )
                 self._hdf5_recursion(
                     hdf5_object=file, root=parent_item, parent=parent_item
                 )
@@ -280,7 +328,7 @@ class MainWindow(QMainWindow):
     def dropEvent(self, event: QDropEvent) -> None:
         """Open Files that are dropped into Window."""
         for file in event.mimeData().text().split("\n"):
-            self._open_file(file[8:])
+            self._open_file(pathlib.Path(file[8:]))
         event.acceptProposedAction()
 
     # ----- Slots ----- #
@@ -334,23 +382,59 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def _handle_action_open_file(self) -> None:
         """Open HDF5 Files."""
+        settings = QSettings()
+        folder: pathlib.Path = settings.value(
+            "paths/last_opened_file_directory", defaultValue=os.path.expanduser("~")
+        )
+        default_path = (
+            str(folder.absolute())
+            if folder.absolute().exists()
+            else os.path.expanduser("~")
+        )
         file_paths, _ = QFileDialog.getOpenFileNames(
             self,
             "Open File",
-            os.path.expanduser("~"),
+            default_path,
             "HDF5 File (*.hdf5, *.h5);;All Files (*.*)",
         )
+        if not file_paths:
+            return
+
+        settings.setValue(
+            "paths/last_opened_file_directory", pathlib.Path(file_paths[0]).parent
+        )
         for file in file_paths:
-            self._open_file(file)
+            self._open_file(pathlib.Path(file))
 
     @pyqtSlot()
     def _handle_action_open_folder(self) -> None:
         """Open all HDF5 Files in a Folder."""
+        settings = QSettings()
+        folder: pathlib.Path = settings.value(
+            "paths/last_opened_folder_directory",
+            defaultValue=pathlib.Path(os.path.expanduser("~")),
+        )
+        default_path = (
+            str(folder.absolute())
+            if folder.absolute().exists()
+            else os.path.expanduser("~")
+        )
         folder_path = QFileDialog.getExistingDirectory(
-            self, "Open Folder", os.path.expanduser("~")
+            self, "Open Folder", default_path
+        )
+        if not folder_path:
+            return
+
+        settings.setValue(
+            "paths/last_opened_folder_directory", pathlib.Path(folder_path)
         )
         for file in os.listdir(folder_path):
-            self._open_file(os.path.join(folder_path, file))
+            self._open_file(pathlib.Path(folder_path, file))
+
+    @pyqtSlot()
+    def _handle_action_open_settings(self) -> None:
+        """Open settings."""
+        self._settings_window = SettingsWindow(main_window=self)
 
     @pyqtSlot()
     def _handle_action_clear_files(self) -> None:
@@ -372,3 +456,20 @@ class MainWindow(QMainWindow):
     def _handle_close(self) -> None:
         """Close Window."""
         self.close()
+
+    @pyqtSlot()
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        """Close Window."""
+        settings = QSettings()
+
+        settings.setValue("main_window/size", self.size())
+        settings.setValue("main_window/position", self.pos())
+
+        try:
+            opened_file_list = self.opened_files
+        except AttributeError:
+            opened_file_list = tuple()
+            logging.warning("Could not save list of opened files.")
+        settings.setValue("settings/last_opened_files", opened_file_list)
+
+        settings.sync()
