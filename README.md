@@ -22,29 +22,9 @@ They are widely used in Industry and Academia to store large sets of raw data.
  - Export files to various other file formats
 
 
-## ▶️ GUI Mode
-Files can be opened in a GUI either by double-clicking, drag-and-drop or via the File menu.
+## ▶️ Screenshot
+Files can be opened either by double-clicking, drag-and-drop or via the File menu.
 ![Screenshot](src/hdf5viewer/img/screenshot.jpg)
-
-
-## ▶️ CLI Mode
-A command line interface provides easy access to the file contents for scripting.
-Use `hdf5viewer --help` to see all available options.
-
-```sh
-$ ./hdf5viewer -t test.h5
-──────────────────────────────────
-  File: test.h5
-──────────────────────────────────
-  ├─ Arrays
-  │  ├─ Float
-  │  ├─ Integer
-  ├─ Numpy Arrays
-  │  ├─ Float
-  │  │  ├─ float16
-  │  │  ├─ float32
-  │  │  └─ float64
-```
 
 
 ## ▶️ Installation
