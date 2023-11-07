@@ -42,7 +42,6 @@ from PyQt6.QtWidgets import (
 
 from hdf5viewer.gui.about_page import AboutPage
 from hdf5viewer.gui.export_window import ExportWindow
-from hdf5viewer.gui.settings_window import SettingsWindow
 from hdf5viewer.gui.table_model import DataTable, TableModel
 from hdf5viewer.img.img_path import img_path
 from hdf5viewer.lib_h5.dataset_types import H5DatasetType
@@ -122,12 +121,6 @@ class MainWindow(QMainWindow):
         act_clear_files.triggered.connect(self._handle_action_clear_files)  # NOQA
         mbr_file.addAction(act_clear_files)
         mbr_file.addSeparator()
-        act_settings = QAction("&Settings...", self)
-        act_settings.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "settings.svg"))))
-        act_settings.setShortcut("Ctrl+Shift+S")
-        act_settings.triggered.connect(self._handle_action_open_settings)  # NOQA
-        mbr_file.addAction(act_settings)
-        mbr_file.addSeparator()
         act_quit = QAction("&Quit", self)
         act_quit.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "quit.svg"))))
         act_quit.setShortcut("Ctrl+Q")
@@ -154,14 +147,8 @@ class MainWindow(QMainWindow):
             self._open_file(init_file_path)
 
         # Open last opened files again
-        if (
-            settings.value(
-                "settings/reopen_files_on_startup", defaultValue=Qt.CheckState.Unchecked
-            )
-            == Qt.CheckState.Checked
-        ):
-            for file in settings.value("settings/last_opened_files", defaultValue=()):
-                self._open_file(file)
+        for file in settings.value("settings/last_opened_files", defaultValue=()):
+            self._open_file(file)
 
     @property
     def selected_item(self) -> tuple[pathlib.Path, str, Any]:
@@ -383,8 +370,10 @@ class MainWindow(QMainWindow):
     def _handle_action_open_file(self) -> None:
         """Open HDF5 Files."""
         settings = QSettings()
-        folder: pathlib.Path = settings.value(
-            "paths/last_opened_file_directory", defaultValue=os.path.expanduser("~")
+        folder: pathlib.Path = pathlib.Path(
+            settings.value(
+                "paths/last_opened_file_directory", defaultValue=os.path.expanduser("~")
+            )
         )
         default_path = (
             str(folder.absolute())
@@ -430,11 +419,6 @@ class MainWindow(QMainWindow):
         )
         for file in os.listdir(folder_path):
             self._open_file(pathlib.Path(folder_path, file))
-
-    @pyqtSlot()
-    def _handle_action_open_settings(self) -> None:
-        """Open settings."""
-        self._settings_window = SettingsWindow(main_window=self)
 
     @pyqtSlot()
     def _handle_action_clear_files(self) -> None:
