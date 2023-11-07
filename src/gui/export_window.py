@@ -34,11 +34,11 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from hdf5viewer.img.img_path import img_path
-from hdf5viewer.lib_h5.file_export import export_dataset, export_file, export_group
+from src.img.img_path import img_path
+from src.lib_h5.file_export import export_dataset, export_file, export_group
 
 if TYPE_CHECKING:
-    from hdf5viewer.gui.main_window import MainWindow
+    from gui.main_window import MainWindow
 
 
 class ExportWindow(QWidget):

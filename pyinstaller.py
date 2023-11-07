@@ -26,12 +26,12 @@ def build():
     is_windows = platform == "win32"
     PyInstaller.__main__.run(
         [
-            "src/hdf5viewer/main.py",
+            "main.py",
             "--noconfirm",
             "--windowed",
-            f"--icon=src/hdf5viewer/img/file.{'ico' if is_windows else 'svg'}",
-            "--add-data=src/hdf5viewer/img/*" + os.pathsep + "img",
-            "--add-data=src/hdf5viewer/html/*" + os.pathsep + "html",
+            f"--icon=src/img/file.{'ico' if is_windows else 'svg'}",
+            "--add-data=src/img/*" + os.pathsep + "img",
+            "--add-data=src/html/*" + os.pathsep + "html",
             "--add-data=LICENSE" + os.pathsep + ".",
             "--add-data=README.md" + os.pathsep + ".",
         ]

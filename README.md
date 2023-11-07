@@ -24,7 +24,7 @@ They are widely used in Industry and Academia to store large sets of raw data.
 
 ## ▶️ Screenshot
 Files can be opened either by double-clicking, drag-and-drop or via the File menu.
-![Screenshot](src/hdf5viewer/img/screenshot.jpg)
+![Screenshot](src/img/screenshot.jpg)
 
 
 ## ▶️ Installation

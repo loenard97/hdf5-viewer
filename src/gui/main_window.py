@@ -20,6 +20,7 @@ import os
 import pathlib
 from typing import Any
 
+from natsort import natsorted
 import h5py
 import numpy as np
 import pyqtgraph as pg
@@ -40,12 +41,12 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from hdf5viewer.gui.about_page import AboutPage
-from hdf5viewer.gui.export_window import ExportWindow
-from hdf5viewer.gui.table_model import DataTable, TableModel
-from hdf5viewer.img.img_path import img_path
-from hdf5viewer.lib_h5.dataset_types import H5DatasetType
-from hdf5viewer.lib_h5.file_size import file_size_to_str
+from src.gui.about_page import AboutPage
+from src.gui.export_window import ExportWindow
+from src.gui.table_model import DataTable, TableModel
+from src.img.img_path import img_path
+from src.lib_h5.dataset_types import H5DatasetType
+from src.lib_h5.file_size import file_size_to_str
 
 
 class MainWindow(QMainWindow):
@@ -146,10 +147,6 @@ class MainWindow(QMainWindow):
         if init_file_path:
             self._open_file(init_file_path)
 
-        # Open last opened files again
-        for file in settings.value("settings/last_opened_files", defaultValue=()):
-            self._open_file(file)
-
     @property
     def selected_item(self) -> tuple[pathlib.Path, str, Any]:
         """Tuple of selected file name, object name and object type."""
@@ -209,7 +206,8 @@ class MainWindow(QMainWindow):
         parent: QTreeWidgetItem,
     ) -> None:
         """Recursively go through hdf5 File and construct QTreeWidgetItems."""
-        for name, value in hdf5_object.items():
+        for name in natsorted(hdf5_object):
+            value = hdf5_object[name]
             if str(type(value)) == "<class 'h5py._hl.group.Group'>":
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
@@ -219,6 +217,7 @@ class MainWindow(QMainWindow):
                 self._hdf5_recursion(value, root, child_item)
 
             elif str(type(value)) == "<class 'h5py._hl.dataset.Dataset'>":
+                print(name)
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Dataset")

@@ -22,7 +22,7 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from hdf5viewer.gui.main_window import MainWindow
+from src.gui.main_window import MainWindow
 
 if sys.platform == "win32":
     # Set Windows Taskbar Icon

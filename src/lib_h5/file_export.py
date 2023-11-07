@@ -21,7 +21,7 @@ import pathlib
 import h5py
 import numpy as np
 
-from hdf5viewer.lib_h5.dataset_types import H5DatasetType
+from src.lib_h5.dataset_types import H5DatasetType
 
 
 def export_file(
