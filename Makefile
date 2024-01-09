@@ -24,13 +24,13 @@ debug:
 	$(PYTHON) main.py --debug
 
 run:
-	$(PYTHON) src/hdf5viewer/main.py
+	$(PYTHON) main.py
 
 fmt:
-	isort src tests
-	black src tests
-	flake8 src tests
-	mypy src tests
+	isort .
+	black .
+	flake8 .
+	mypy .
 
 build:
 	@echo "running pyinstaller..."

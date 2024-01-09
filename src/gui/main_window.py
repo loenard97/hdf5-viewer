@@ -20,10 +20,10 @@ import os
 import pathlib
 from typing import Any
 
-from natsort import natsorted
 import h5py
 import numpy as np
 import pyqtgraph as pg
+from natsort import natsorted
 from PyQt6 import QtGui
 from PyQt6.QtCore import QPoint, QSettings, QSize, Qt, pyqtSlot
 from PyQt6.QtGui import QAction, QDragEnterEvent, QDropEvent, QIcon
@@ -217,7 +217,6 @@ class MainWindow(QMainWindow):
                 self._hdf5_recursion(value, root, child_item)
 
             elif str(type(value)) == "<class 'h5py._hl.dataset.Dataset'>":
-                print(name)
                 child_item = QTreeWidgetItem(parent, type=0)
                 child_item.setText(0, name)
                 child_item.setText(1, "Dataset")
@@ -314,7 +313,8 @@ class MainWindow(QMainWindow):
     def dropEvent(self, event: QDropEvent) -> None:
         """Open Files that are dropped into Window."""
         for file in event.mimeData().text().split("\n"):
-            self._open_file(pathlib.Path(file[8:]))
+            file = file.removeprefix("file:")
+            self._open_file(pathlib.Path(file))
         event.acceptProposedAction()
 
     # ----- Slots ----- #

@@ -15,9 +15,8 @@ They are widely used in Industry and Academia to store large sets of raw data.
 
 
 ## 📋 Features
- - Files can be opened in a GUI or with a CLI
- - Load h5 files to view all groups and datasets
- - Also supports remote files on a NAS for example
+ - Open, or simply Drag&Drop, h5 files to view all groups and datasets
+ - Supports remote files on a NAS for example
  - Display datasets as graphs or text
  - Export files to various other file formats
 
@@ -46,9 +45,9 @@ You will have to manually create a desktop shortcut and associate file extension
 
 
 ### Building binaries from source
-Run `pyinstaller.py` to generate the binary.
+Running `python pyinstaller.py` will generate the binary in `/dist/main/main`.
 Use the `windows/compile.iss` script with Inno Setup to generate Installer on Windows.
-Run the `build.sh` with `build-essential devscripts debhelper` installed to generate a deb package on Linux.
+Run `make build` with `build-essential devscripts debhelper` installed to generate a deb package on Linux.
 
 
 ### Install from Source
@@ -58,8 +57,7 @@ I suggest creating a Python Virtual Environment:
 python3 -m venv venv
 source venv/bin/activate
 pip install requirements.txt
-pip install -e .
-python hdf5viewer.py
+python main.py
 ```
 
 ## 🔗 Acknowledgements and Licenses
@@ -67,6 +65,8 @@ The following Python libraries are used in this project:
  - [PyQt6](https://riverbankcomputing.com/commercial/pyqt)
  - [h5py](https://docs.h5py.org/en/stable/licenses.html)
  - [numpy](https://numpy.org/doc/stable/license.html)
+ - [natsort](https://github.com/SethMMorton/natsort)
+ - [setuptools](https://github.com/pypa/setuptools)
  - [pyqtgraph](https://www.pyqtgraph.org/)
  - [PyInstaller](https://pyinstaller.org/en/stable/license.html)
 

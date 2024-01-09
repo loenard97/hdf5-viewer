@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
 from sys import platform
 
 import PyInstaller.__main__
@@ -23,19 +22,19 @@ import PyInstaller.__main__
 
 def build():
     """Build executable with pyinstaller."""
-    is_windows = platform == "win32"
-    PyInstaller.__main__.run(
-        [
-            "main.py",
-            "--noconfirm",
-            "--windowed",
-            f"--icon=src/img/file.{'ico' if is_windows else 'svg'}",
-            "--add-data=src/img/*" + os.pathsep + "img",
-            "--add-data=src/html/*" + os.pathsep + "html",
-            "--add-data=LICENSE" + os.pathsep + ".",
-            "--add-data=README.md" + os.pathsep + ".",
-        ]
-    )
+    build_args = [
+        "main.py",
+        "--noconfirm",
+        "--windowed",
+        "--add-data=src/img/*:img",
+        "--add-data=src/html/*:html",
+        "--add-data=LICENSE:.",
+        "--add-data=README.md:.",
+    ]
+    if platform == "windows":
+        build_args.append("--icon=src/img/file.ico")
+
+    PyInstaller.__main__.run(build_args)
 
 
 if __name__ == "__main__":
