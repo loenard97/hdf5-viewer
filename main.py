@@ -17,7 +17,6 @@
 
 import logging
 import os
-import pathlib
 import sys
 
 from PyQt6.QtWidgets import QApplication
@@ -51,15 +50,10 @@ else:
 
 def main() -> None:
     """HDF5 File Viewer entry point."""
-    if len(sys.argv) > 1:
-        file_path = pathlib.Path(sys.argv[1])
-    else:
-        file_path = pathlib.Path("")
-
     app = QApplication(sys.argv)
     app.setOrganizationName("HDF5Viewer")
     app.setApplicationName("HDF5ViewerPython")
-    main_win = MainWindow(init_file_path=file_path)
+    main_win = MainWindow()
     main_win.show()
     sys.exit(app.exec())
 

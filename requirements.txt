@@ -1,8 +1,8 @@
 PyQt6==6.6.1
 PyQt6-Qt6==6.6.1
-h5py==3.10.0
-numpy==1.26.3
-pyqtgraph==0.13.3
-pyinstaller==6.3.0
+h5py==3.11.0
+numpy==1.26.4
+pyqtgraph==0.13.4
+pyinstaller==6.6.0
 natsort==8.4.0
-setuptools==69.0.3
+setuptools==69.5.1

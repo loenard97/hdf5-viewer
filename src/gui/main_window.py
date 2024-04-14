@@ -18,15 +18,15 @@
 import logging
 import os
 import pathlib
+import sys
 from typing import Any
 
 import h5py
 import numpy as np
 import pyqtgraph as pg
 from natsort import natsorted
-from PyQt6 import QtGui
 from PyQt6.QtCore import QPoint, QSettings, QSize, Qt, pyqtSlot
-from PyQt6.QtGui import QAction, QDragEnterEvent, QDropEvent, QIcon
+from PyQt6.QtGui import QAction, QDragEnterEvent, QDropEvent, QIcon, QCloseEvent
 from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -52,7 +52,7 @@ from src.lib_h5.file_size import file_size_to_str
 class MainWindow(QMainWindow):
     """Start Main Window of the GUI."""
 
-    def __init__(self, init_file_path: pathlib.Path) -> None:
+    def __init__(self) -> None:
         """Start Main Window of the GUI."""
         super().__init__(flags=Qt.WindowType.Window)
         self.setAcceptDrops(True)
@@ -92,6 +92,10 @@ class MainWindow(QMainWindow):
 
         # Center Layout
         self._tw_file = QTreeWidget(self)
+        # self._tw_file.setSelectionMode(QAbstractItemView.selectionMode(self._tw_file).ExtendedSelection)
+        # self._tw_file.setAlternatingRowColors(True)
+        self._tw_file.setSortingEnabled(True)
+        self._tw_file.sortItems(0, Qt.SortOrder.AscendingOrder)
         self._tw_file.setColumnCount(2)
         self._tw_file.setHeaderLabels(["Name", "Type"])
         self._tw_file.setColumnWidth(0, 500)
@@ -105,47 +109,53 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(wgt_central)
 
         # File Menu
-        mbr_file = self.menuBar().addMenu("&File")
-        act_file = QAction("&Open File...", self)
-        act_file.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "file.svg"))))
-        act_file.setShortcut("Ctrl+O")
-        act_file.triggered.connect(self._handle_action_open_file)  # NOQA
-        mbr_file.addAction(act_file)
-        act_open_folder = QAction("&Open Folder...", self)
-        act_open_folder.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "group.svg"))))
-        act_open_folder.triggered.connect(self._handle_action_open_folder)  # NOQA
-        mbr_file.addAction(act_open_folder)
-        act_clear_files = QAction("&Clear all Files", self)
-        act_clear_files.setIcon(
-            QIcon(str(pathlib.Path(self._icon_dir, "file_clear.svg")))
-        )
-        act_clear_files.triggered.connect(self._handle_action_clear_files)  # NOQA
-        mbr_file.addAction(act_clear_files)
-        mbr_file.addSeparator()
-        act_quit = QAction("&Quit", self)
-        act_quit.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "quit.svg"))))
-        act_quit.setShortcut("Ctrl+Q")
-        act_quit.triggered.connect(self._handle_close)  # NOQA
-        mbr_file.addAction(act_quit)
+        if (menu_bar := self.menuBar()) is None:
+            return
+        if (mbr_file := menu_bar.addMenu("&File")) is not None:
+            act_file = QAction("&Open File...", self)
+            act_file.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "file.svg"))))
+            act_file.setShortcut("Ctrl+O")
+            act_file.triggered.connect(self._handle_action_open_file)  # NOQA
+            mbr_file.addAction(act_file)
+            act_open_folder = QAction("&Open Folder...", self)
+            act_open_folder.setIcon(
+                QIcon(str(pathlib.Path(self._icon_dir, "group.svg")))
+            )
+            act_open_folder.triggered.connect(self._handle_action_open_folder)  # NOQA
+            mbr_file.addAction(act_open_folder)
+            act_clear_files = QAction("&Clear all Files", self)
+            act_clear_files.setIcon(
+                QIcon(str(pathlib.Path(self._icon_dir, "file_clear.svg")))
+            )
+            act_clear_files.triggered.connect(self._handle_action_clear_files)  # NOQA
+            mbr_file.addAction(act_clear_files)
+            mbr_file.addSeparator()
+            act_quit = QAction("&Quit", self)
+            act_quit.setIcon(QIcon(str(pathlib.Path(self._icon_dir, "quit.svg"))))
+            act_quit.setShortcut("Ctrl+Q")
+            act_quit.triggered.connect(self._handle_close)  # NOQA
+            mbr_file.addAction(act_quit)
 
         # Export Menu
-        mbr_export = self.menuBar().addMenu("&Export")
-        act_export = QAction("&Export Item...", self)
-        act_export.setIcon(QIcon(os.path.join(self._icon_dir, "export.svg")))
-        act_export.setShortcut("Ctrl+E")
-        act_export.triggered.connect(self._handle_action_export)  # NOQA
-        mbr_export.addAction(act_export)
+        if (mbr_export := menu_bar.addMenu("&Export")) is not None:
+            act_export = QAction("&Export Item...", self)
+            act_export.setIcon(QIcon(os.path.join(self._icon_dir, "export.svg")))
+            act_export.setShortcut("Ctrl+E")
+            act_export.triggered.connect(self._handle_action_export)  # NOQA
+            mbr_export.addAction(act_export)
 
         # Help Menu
-        mbr_help = self.menuBar().addMenu("&Help")
-        act_about = QAction("&About Page...", self)
-        act_about.setIcon(QIcon(os.path.join(self._icon_dir, "about.svg")))
-        act_about.triggered.connect(self._handle_action_about)  # NOQA
-        mbr_help.addAction(act_about)
+        if (mbr_help := menu_bar.addMenu("&Help")) is not None:
+            act_about = QAction("&About Page...", self)
+            act_about.setIcon(QIcon(os.path.join(self._icon_dir, "about.svg")))
+            act_about.triggered.connect(self._handle_action_about)  # NOQA
+            mbr_help.addAction(act_about)
 
         # Open File when double-clicking
-        if init_file_path:
-            self._open_file(init_file_path)
+        if len(sys.argv) > 1:
+            self._open_file(pathlib.Path(sys.argv[0]))
+        for file in settings.value("settings/last_opened_files", ()):
+            self._open_file(file)
 
     @property
     def selected_item(self) -> tuple[pathlib.Path, str, Any]:
@@ -163,7 +173,8 @@ class MainWindow(QMainWindow):
         """Currently opened files."""
         file_paths = []
         for i in range(self._tw_file.topLevelItemCount()):
-            file_paths.append(pathlib.Path(self._tw_file.topLevelItem(i).text(0)))
+            if (item := self._tw_file.topLevelItem(i)) is not None:
+                file_paths.append(pathlib.Path(item.text(0)))
         return tuple(file_paths)
 
     def _open_file(self, file_path: pathlib.Path) -> None:
@@ -193,11 +204,10 @@ class MainWindow(QMainWindow):
 
     def _tree_recursion(self, item: QTreeWidgetItem, path: list[str]) -> None:
         """Get Array of all Parents."""
-        try:
-            path.append(item.parent().text(0))
-            self._tree_recursion(item.parent(), path)
-        except AttributeError:
+        if (parent := item.parent()) is None:
             return
+        path.append(parent.text(0))
+        self._tree_recursion(parent, path)
 
     def _hdf5_recursion(
         self,
@@ -250,17 +260,13 @@ class MainWindow(QMainWindow):
 
         new_widget: QTextBrowser | pg.PlotWidget | pg.ImageView | QTableView | QWidget
         if data_type == H5DatasetType.String:
-            label = "Could not cast to String"
-            try:
+            if data.ndim == 0:
+                label = data.item()
+                if isinstance(label, bytes):
+                    label = label.decode()
+                label = str(label)
+            else:
                 label = str(data)
-            except (TypeError, AttributeError) as err:
-                logging.warning(f"Failed plot dataset as '{plot_type}'. Error: '{err}'")
-                try:
-                    label = "\n".join([e.decode() for e in data])
-                except (TypeError, AttributeError) as err:
-                    logging.warning(
-                        f"Failed plot dataset as '{plot_type}'. Error: '{err}'"
-                    )
             new_widget = QTextBrowser()
             new_widget.setText(label)
         elif data_type == H5DatasetType.Array1D:
@@ -301,18 +307,26 @@ class MainWindow(QMainWindow):
         self._pw_dataset = new_widget
 
     # ----- Drag & Drop ----- #
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+    def dragEnterEvent(self, event: QDragEnterEvent | None) -> None:
         """Accept Drag Events for h5 and hdf5 files to initiate Drag & Drop Events."""
-        for file in event.mimeData().text().split("\n"):
+        if event is None:
+            return
+        if (mime_data := event.mimeData()) is None:
+            return
+        for file in mime_data.text().split("\n"):
             if len(file) == 0:
                 continue
             if not file.split(".")[-1] in ["h5", "hdf5"]:
                 return
         event.acceptProposedAction()
 
-    def dropEvent(self, event: QDropEvent) -> None:
+    def dropEvent(self, event: QDropEvent | None) -> None:
         """Open Files that are dropped into Window."""
-        for file in event.mimeData().text().split("\n"):
+        if event is None:
+            return
+        if (mime_data := event.mimeData()) is None:
+            return
+        for file in mime_data.text().split("\n"):
             file = file.removeprefix("file:")
             self._open_file(pathlib.Path(file))
         event.acceptProposedAction()
@@ -441,18 +455,13 @@ class MainWindow(QMainWindow):
         self.close()
 
     @pyqtSlot()
-    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
         """Close Window."""
-        settings = QSettings()
+        if a0 is None:
+            return
 
+        settings = QSettings()
         settings.setValue("main_window/size", self.size())
         settings.setValue("main_window/position", self.pos())
-
-        try:
-            opened_file_list = self.opened_files
-        except AttributeError:
-            opened_file_list = tuple()
-            logging.warning("Could not save list of opened files.")
-        settings.setValue("settings/last_opened_files", opened_file_list)
-
+        settings.setValue("settings/last_opened_files", self.opened_files)
         settings.sync()

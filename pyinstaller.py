@@ -20,7 +20,7 @@ from sys import platform
 import PyInstaller.__main__
 
 
-def build():
+def build() -> None:
     """Build executable with pyinstaller."""
     build_args = [
         "main.py",
