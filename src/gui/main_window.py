@@ -47,11 +47,13 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtWidgets import (
     QComboBox,
+    QDockWidget,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLineEdit,
     QMainWindow,
+    QMenu,
     QPushButton,
     QTableView,
     QTextBrowser,
@@ -94,23 +96,21 @@ class MainWindow(QMainWindow):
         self.table_view_dataset = QTableView()
         self.table_view_dataset.setModel(self.table_model_dataset)
         self.table_view_dataset.setColumnWidth(1, 300)
-        lyt_plot_type = QFormLayout()
-        self.cb_plot_type = QComboBox()
-        self.cb_plot_type.addItems(
-            ["Auto", "String", "Array1D", "Array2D", "ImageRGB", "Table"]
-        )
-        self.cb_plot_type.currentTextChanged.connect(  # NOQA
-            self._handle_plot_type_changed
-        )
-        lyt_plot_type.addRow("Plot as", self.cb_plot_type)
         self.plot_wgt_dataset = pg.PlotWidget()
-        self.lyt_dataset = QVBoxLayout()
-        self.lyt_dataset.addWidget(self.table_view_dataset)
-        self.lyt_dataset.addLayout(lyt_plot_type)
-        self.lyt_dataset.addWidget(self.plot_wgt_dataset)
+
+        self.dock_table = QDockWidget()
+        self.dock_table.setWindowTitle("Attributes")
+        self.dock_table.setWidget(self.table_view_dataset)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_table)
+        self.dock_plot = QDockWidget()
+        self.dock_plot.setWindowTitle("Plot")
+        self.dock_plot.setWidget(self.plot_wgt_dataset)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_plot)
 
         # Center Layout
         self.tree_view_file = QTreeView()
+        self.tree_view_file.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree_view_file.customContextMenuRequested.connect(self._handle_tree_menu)
         self.tree_model_file = QStandardItemModel()
         self.tree_model_file.setHorizontalHeaderLabels(["Name", "Type"])
         self.tree_model_file_proxy = QSortFilterProxyModel()
@@ -137,6 +137,16 @@ class MainWindow(QMainWindow):
         self.act_filter.activated.connect(self.le_filter.setFocus)
         self.le_filter.textEdited.connect(self._handle_filter_changed)
 
+        lyt_plot_type = QFormLayout()
+        self.cb_plot_type = QComboBox()
+        self.cb_plot_type.addItems(
+            ["Auto", "String", "Array1D", "Array2D", "ImageRGB", "Table"]
+        )
+        self.cb_plot_type.currentTextChanged.connect(  # NOQA
+            self._handle_plot_type_changed
+        )
+        lyt_plot_type.addRow("Plot as", self.cb_plot_type)
+
         lyt_filter = QHBoxLayout()
         lyt_filter.addWidget(self.btn_filter_regex)
         lyt_filter.addWidget(self.btn_filter_case)
@@ -145,10 +155,11 @@ class MainWindow(QMainWindow):
         lyt_file_tree = QVBoxLayout()
         lyt_file_tree.addWidget(self.tree_view_file)
         lyt_file_tree.addLayout(lyt_filter)
+        lyt_file_tree.addLayout(lyt_plot_type)
 
         wgt_total = QHBoxLayout()
         wgt_total.addLayout(lyt_file_tree)
-        wgt_total.addLayout(self.lyt_dataset)
+        # wgt_total.addLayout(self.lyt_dataset)
         wgt_central = QWidget()
         wgt_central.setLayout(wgt_total)
         self.setCentralWidget(wgt_central)
@@ -337,10 +348,11 @@ class MainWindow(QMainWindow):
             new_widget = QWidget()
 
         # Replace old Plot Widget
-        self.lyt_dataset.replaceWidget(self.plot_wgt_dataset, new_widget)
-        self.plot_wgt_dataset.hide()
-        self.plot_wgt_dataset.destroy()
-        self.plot_wgt_dataset = new_widget
+        self.dock_plot.setWidget(new_widget)
+        # self.lyt_dataset.replaceWidget(self.plot_wgt_dataset, new_widget)
+        # self.plot_wgt_dataset.hide()
+        # self.plot_wgt_dataset.destroy()
+        # self.plot_wgt_dataset = new_widget
 
     # ----- Drag & Drop ----- #
     def dragEnterEvent(self, event: QDragEnterEvent | None) -> None:
@@ -438,6 +450,20 @@ class MainWindow(QMainWindow):
             self.tree_model_file_proxy.setFilterRegularExpression(text)
         else:
             self.tree_model_file_proxy.setFilterFixedString(text)
+
+    @pyqtSlot(QPoint)
+    def _handle_tree_menu(self, pos: QPoint) -> None:
+        menu = QMenu(self)
+        index = self.tree_view_file.indexAt(pos)
+        if index.parent().data() is None:
+            action = QAction("Close file", self)
+            menu.addAction(action)
+            action.triggered.connect(
+                lambda: self.tree_model_file.removeRow(index.row())
+            )
+
+        if (viewport := self.tree_view_file.viewport()) is not None:
+            menu.popup(viewport.mapToGlobal(pos))
 
     @pyqtSlot()
     def _handle_action_open_file(self) -> None:
