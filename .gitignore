@@ -10,6 +10,8 @@
 /debian/hdf5viewer
 /package
 /{envtempdir}
+/pages/public
+/pages/.hugo_build.lock
 *__pycache__*
 *.egg-info*
 *.exe

@@ -1,0 +1,4 @@
+baseURL = 'https://loenard97.github.io/hdf5-viewer/'
+languageCode = 'en-us'
+title = 'HDF5 File Viewer'
+theme = 'mainroad'
