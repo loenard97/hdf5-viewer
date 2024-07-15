@@ -60,6 +60,7 @@ from PyQt6.QtWidgets import (
     QTreeView,
     QVBoxLayout,
     QWidget,
+    QCompleter,
 )
 
 from src.gui.about_page import AboutPage
@@ -122,9 +123,6 @@ class MainWindow(QMainWindow):
         self.tree_view_file.setAcceptDrops(True)
         self.tree_view_file.activated.connect(self._handle_item_changed)
 
-        # # self._tw_file.setSelectionMode(QAbstractItemView.selectionMode(self._tw_file).ExtendedSelection)
-        # # self._tw_file.setAlternatingRowColors(True)
-
         self.btn_filter_regex = QPushButton("RegExp")
         self.btn_filter_regex.setCheckable(True)
         self.btn_filter_regex.clicked.connect(self._handle_filter_changed)
@@ -136,6 +134,9 @@ class MainWindow(QMainWindow):
         self.act_filter = QShortcut(QKeySequence(Qt.Key.Key_F), self)
         self.act_filter.activated.connect(self.le_filter.setFocus)
         self.le_filter.textEdited.connect(self._handle_filter_changed)
+        self.completer = QCompleter()
+        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.le_filter.setCompleter(self.completer)
 
         lyt_plot_type = QFormLayout()
         self.cb_plot_type = QComboBox()
@@ -213,6 +214,17 @@ class MainWindow(QMainWindow):
         for file in settings.value("settings/last_opened_files", ()):
             self._open_file(file)
 
+    def iter_items(self, root):
+        def recurse(parent):
+            for row in range(parent.rowCount()):
+                child = parent.child(row, 0)
+                yield child.text()
+                if child.hasChildren():
+                    yield from recurse(child)
+
+        if root is not None:
+            yield from recurse(root)
+
     @property
     def selected_item(self) -> tuple[pathlib.Path, str, Any]:
         """Tuple of selected file name, object name and object type."""
@@ -254,6 +266,15 @@ class MainWindow(QMainWindow):
                 self.tree_model_file.appendRow([parent_name, parent_text])
         except (OSError, ValueError) as err:
             logging.warning(f"Failed to open file. Error: '{err}'")
+
+        root = self.tree_model_file.invisibleRootItem()
+        self.completer = QCompleter(list(self.iter_items(root)))
+        self.completer.setCaseSensitivity(
+            Qt.CaseSensitivity.CaseSensitive
+            if self.btn_filter_case.isChecked()
+            else Qt.CaseSensitivity.CaseInsensitive
+        )
+        self.le_filter.setCompleter(self.completer)
 
     def _hdf5_recursion(
         self,
@@ -450,6 +471,11 @@ class MainWindow(QMainWindow):
             self.tree_model_file_proxy.setFilterRegularExpression(text)
         else:
             self.tree_model_file_proxy.setFilterFixedString(text)
+        self.completer.setCaseSensitivity(
+            Qt.CaseSensitivity.CaseSensitive
+            if self.btn_filter_case.isChecked()
+            else Qt.CaseSensitivity.CaseInsensitive
+        )
 
     @pyqtSlot(QPoint)
     def _handle_tree_menu(self, pos: QPoint) -> None:

@@ -38,7 +38,7 @@ from src.img.img_path import img_path
 from src.lib_h5.file_export import export_dataset, export_file, export_group
 
 if TYPE_CHECKING:
-    from gui.main_window import MainWindow
+    from src.gui.main_window import MainWindow
 
 
 class ExportWindow(QWidget):
