@@ -95,6 +95,7 @@ class MainWindow(QMainWindow):
         # Layout Right Side
         self.table_model_dataset = TableModel(header=["Attribute", "Value"])
         self.table_view_dataset = QTableView()
+        self.table_view_dataset.setMinimumWidth(700)
         self.table_view_dataset.setModel(self.table_model_dataset)
         self.table_view_dataset.setColumnWidth(1, 300)
         self.plot_wgt_dataset = pg.PlotWidget()
@@ -121,7 +122,7 @@ class MainWindow(QMainWindow):
         self.tree_view_file.setModel(self.tree_model_file_proxy)
         self.tree_view_file.setColumnWidth(0, 500)
         self.tree_view_file.setAcceptDrops(True)
-        self.tree_view_file.activated.connect(self._handle_item_changed)
+        self.tree_view_file.clicked.connect(self._handle_item_changed)
 
         self.btn_filter_regex = QPushButton("RegExp")
         self.btn_filter_regex.setCheckable(True)
@@ -396,7 +397,10 @@ class MainWindow(QMainWindow):
         if (mime_data := event.mimeData()) is None:
             return
         for file in mime_data.text().split("\n"):
-            file = file.removeprefix("file:")
+            if sys.platform == "win32":
+                file = file[8:]
+            else:
+                file = file.removeprefix("file:")
             self._open_file(pathlib.Path(file))
         event.acceptProposedAction()
 
