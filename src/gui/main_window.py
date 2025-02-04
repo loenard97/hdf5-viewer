@@ -339,6 +339,8 @@ class MainWindow(QMainWindow):
             new_widget = QTextBrowser()
             new_widget.setText(label)
         elif data_type == H5DatasetType.Array1D:
+            if data.ndim == 2 and min(data.shape) == 1:
+                data = data.ravel()
             new_widget = pg.PlotWidget()
             try:
                 new_widget.plot(data)
