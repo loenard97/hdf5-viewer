@@ -19,7 +19,7 @@ import logging
 import os
 import pathlib
 import sys
-from typing import Any
+from typing import Any, Generator
 
 import h5py
 import numpy as np
@@ -47,6 +47,7 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtWidgets import (
     QComboBox,
+    QCompleter,
     QDockWidget,
     QFileDialog,
     QFormLayout,
@@ -60,11 +61,9 @@ from PyQt6.QtWidgets import (
     QTreeView,
     QVBoxLayout,
     QWidget,
-    QCompleter,
 )
 
 from src.gui.about_page import AboutPage
-from src.gui.export_window import ExportWindow
 from src.gui.table_model import DataTable, TableModel
 from src.img.img_path import img_path
 from src.lib_h5.dataset_types import H5DatasetType
@@ -181,7 +180,7 @@ class MainWindow(QMainWindow):
             )
             act_open_folder.triggered.connect(self._handle_action_open_folder)  # NOQA
             mbr_file.addAction(act_open_folder)
-            act_clear_files = QAction("&Clear all Files", self)
+            act_clear_files = QAction("&Close all Files", self)
             act_clear_files.setIcon(
                 QIcon(str(pathlib.Path(self.icon_dir, "file_clear.svg")))
             )
@@ -193,14 +192,6 @@ class MainWindow(QMainWindow):
             act_quit.setShortcut("Ctrl+Q")
             act_quit.triggered.connect(self._handle_close)  # NOQA
             mbr_file.addAction(act_quit)
-
-        # Export Menu
-        if (mbr_export := menu_bar.addMenu("&Export")) is not None:
-            act_export = QAction("&Export Item...", self)
-            act_export.setIcon(QIcon(os.path.join(self.icon_dir, "export.svg")))
-            act_export.setShortcut("Ctrl+E")
-            act_export.triggered.connect(self._handle_action_export)  # NOQA
-            mbr_export.addAction(act_export)
 
         # Help Menu
         if (mbr_help := menu_bar.addMenu("&Help")) is not None:
@@ -215,13 +206,16 @@ class MainWindow(QMainWindow):
         for file in settings.value("settings/last_opened_files", ()):
             self._open_file(file)
 
-    def iter_items(self, root):
-        def recurse(parent):
+    @staticmethod
+    def iter_items(root: QStandardItem) -> Generator[Any, Any, None]:
+        """Iterate recursively through all children of a QStandardItem."""
+
+        def recurse(parent: QStandardItem) -> Generator[Any, Any, None]:
             for row in range(parent.rowCount()):
-                child = parent.child(row, 0)
-                yield child.text()
-                if child.hasChildren():
-                    yield from recurse(child)
+                if (child := parent.child(row, 0)) is not None:
+                    yield child.text()
+                    if child.hasChildren():
+                        yield from recurse(child)
 
         if root is not None:
             yield from recurse(root)
@@ -268,14 +262,14 @@ class MainWindow(QMainWindow):
         except (OSError, ValueError) as err:
             logging.warning(f"Failed to open file. Error: '{err}'")
 
-        root = self.tree_model_file.invisibleRootItem()
-        self.completer = QCompleter(list(self.iter_items(root)))
-        self.completer.setCaseSensitivity(
-            Qt.CaseSensitivity.CaseSensitive
-            if self.btn_filter_case.isChecked()
-            else Qt.CaseSensitivity.CaseInsensitive
-        )
-        self.le_filter.setCompleter(self.completer)
+        if (root := self.tree_model_file.invisibleRootItem()) is not None:
+            self.completer = QCompleter(list(self.iter_items(root)))
+            self.completer.setCaseSensitivity(
+                Qt.CaseSensitivity.CaseSensitive
+                if self.btn_filter_case.isChecked()
+                else Qt.CaseSensitivity.CaseInsensitive
+            )
+            self.le_filter.setCompleter(self.completer)
 
     def _hdf5_recursion(
         self,
@@ -557,11 +551,6 @@ class MainWindow(QMainWindow):
         """Clear Tree Widget."""
         self.tree_model_file.clear()
         self.table_model_dataset.resetData()
-
-    @pyqtSlot()
-    def _handle_action_export(self) -> None:
-        """Export selected Item."""
-        self._export_window = ExportWindow(main_window=self)
 
     @pyqtSlot()
     def _handle_action_about(self) -> None:

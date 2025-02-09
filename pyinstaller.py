@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from sys import platform
+import sys
 
 import PyInstaller.__main__
 
@@ -31,7 +31,7 @@ def build() -> None:
         "--add-data=LICENSE:.",
         "--add-data=README.md:.",
     ]
-    if platform == "windows":
+    if sys.platform == "win32":
         build_args.append("--icon=src/img/file.ico")
     else:
         build_args.append("--onefile")

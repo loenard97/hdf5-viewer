@@ -19,46 +19,33 @@ They are widely used in Industry and Academia to store large sets of raw data.
  - Supports remote files on a NAS for example
  - Display datasets as graphs or text
  - Export files to various other file formats
+ - Filter list of Datasets by name
 
-
-## ▶️ Screenshot
 Files can be opened either by double-clicking, drag-and-drop or via the File menu.
 ![Screenshot](src/img/screenshot.jpg)
 
+Right-click on a plot in the bottom right to export the dataset to various other formats, like .csv.
+
 
 ## ▶️ Installation
-### Windows
-Simply download and execute the `HDF5Viewer_Windows_Installer_*version*.exe` 
-from the [Releases](https://github.com/loenard97/hdf5-viewer/releases) page 
-and follow the instructions.
-
-### Debian-like Linux Distros
-Download the `hdf5viewer_*version*_all.deb` package from the 
-[Releases](https://github.com/loenard97/hdf5-viewer/releases) page.
-
-Open a Terminal in the Download Folder and install the package with
-```commandline
-sudo apt install ./hdf5viewer_*version*_all.deb
-```
-This will install the program in `/usr/bin/hdf5viewer/hdf5viewer`.
-You will have to manually create a desktop shortcut and associate file extensions with the program.
+### Windows & Linux
+Windows Installers and Linux executables are listed on the 
+[Releases](https://github.com/loenard97/hdf5-viewer/releases) page. Simply download and run the corresponding version. 
 
 
-### Building binaries from source
-Running `python pyinstaller.py` will generate the binary in `/dist/main/main`.
-Use the `windows/compile.iss` script with Inno Setup to generate Installer on Windows.
-Run `make build` with `build-essential devscripts debhelper` installed to generate a deb package on Linux.
-
-
-### Install from Source
-For all other Linux Distros you will have to download the Source Code and build it for yourself.
-I suggest creating a Python Virtual Environment:
+### Mac & building binaries from source
+The HDF5Viewer should run on Mac, but I can not provide executables, because I do not own a Mac. 
+You will have to download the code and use 
 ```commandline
 python3 -m venv venv
 source venv/bin/activate
 pip install requirements.txt
 python main.py
 ```
+to run it directly. Or generate the executable by running `python pyinstaller.py`. This will generate 
+the executable in `/dist/main/main`. Use the `windows/compile.iss` script with Inno Setup to generate the Installer for 
+Windows.
+
 
 ## 🔗 Acknowledgements and Licenses
 The following Python libraries are used in this project:
