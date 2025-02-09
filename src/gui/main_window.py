@@ -25,15 +25,7 @@ import h5py
 import numpy as np
 import pyqtgraph as pg
 from natsort import natsorted
-from PyQt6.QtCore import (
-    QModelIndex,
-    QPoint,
-    QSettings,
-    QSize,
-    QSortFilterProxyModel,
-    Qt,
-    pyqtSlot,
-)
+from PyQt6.QtCore import QModelIndex, QPoint, QSettings, QSize, QSortFilterProxyModel, Qt, pyqtSlot
 from PyQt6.QtGui import (
     QAction,
     QCloseEvent,
@@ -125,7 +117,7 @@ class MainWindow(QMainWindow):
 
         self.btn_filter_regex = QPushButton("RegExp")
         self.btn_filter_regex.setCheckable(True)
-        self.btn_filter_regex.clicked.connect(self._handle_filter_changed)
+        self.btn_filter_regex.clicked.connect(self._handle_filter_changed)  
         self.btn_filter_case = QPushButton("Cc")
         self.btn_filter_case.setCheckable(True)
         self.btn_filter_case.clicked.connect(self._handle_filter_changed)
@@ -140,12 +132,8 @@ class MainWindow(QMainWindow):
 
         lyt_plot_type = QFormLayout()
         self.cb_plot_type = QComboBox()
-        self.cb_plot_type.addItems(
-            ["Auto", "String", "Array1D", "Array2D", "ImageRGB", "Table"]
-        )
-        self.cb_plot_type.currentTextChanged.connect(  # NOQA
-            self._handle_plot_type_changed
-        )
+        self.cb_plot_type.addItems(["Auto", "String", "Array1D", "Array2D", "ImageRGB", "Table"])
+        self.cb_plot_type.currentTextChanged.connect(self._handle_plot_type_changed)
         lyt_plot_type.addRow("Plot as", self.cb_plot_type)
 
         lyt_filter = QHBoxLayout()
@@ -172,32 +160,28 @@ class MainWindow(QMainWindow):
             act_file = QAction("&Open File...", self)
             act_file.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file.svg"))))
             act_file.setShortcut("Ctrl+O")
-            act_file.triggered.connect(self._handle_action_open_file)  # NOQA
+            act_file.triggered.connect(self._handle_action_open_file)
             mbr_file.addAction(act_file)
             act_open_folder = QAction("&Open Folder...", self)
-            act_open_folder.setIcon(
-                QIcon(str(pathlib.Path(self.icon_dir, "group.svg")))
-            )
-            act_open_folder.triggered.connect(self._handle_action_open_folder)  # NOQA
+            act_open_folder.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "group.svg"))))
+            act_open_folder.triggered.connect(self._handle_action_open_folder)
             mbr_file.addAction(act_open_folder)
             act_clear_files = QAction("&Close all Files", self)
-            act_clear_files.setIcon(
-                QIcon(str(pathlib.Path(self.icon_dir, "file_clear.svg")))
-            )
-            act_clear_files.triggered.connect(self._handle_action_clear_files)  # NOQA
+            act_clear_files.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file_clear.svg"))))
+            act_clear_files.triggered.connect(self._handle_action_clear_files)
             mbr_file.addAction(act_clear_files)
             mbr_file.addSeparator()
             act_quit = QAction("&Quit", self)
             act_quit.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "quit.svg"))))
             act_quit.setShortcut("Ctrl+Q")
-            act_quit.triggered.connect(self._handle_close)  # NOQA
+            act_quit.triggered.connect(self._handle_close)
             mbr_file.addAction(act_quit)
 
         # Help Menu
         if (mbr_help := menu_bar.addMenu("&Help")) is not None:
             act_about = QAction("&About Page...", self)
             act_about.setIcon(QIcon(os.path.join(self.icon_dir, "about.svg")))
-            act_about.triggered.connect(self._handle_action_about)  # NOQA
+            act_about.triggered.connect(self._handle_action_about)
             mbr_help.addAction(act_about)
 
         # Open File when double-clicking
@@ -255,9 +239,7 @@ class MainWindow(QMainWindow):
                 parent_text = QStandardItem("HDF5 File")
                 parent_text.setEditable(False)
                 parent_text.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file.svg"))))
-                self._hdf5_recursion(
-                    hdf5_object=file, root=parent_name, parent=parent_name
-                )
+                self._hdf5_recursion(hdf5_object=file, root=parent_name, parent=parent_name)
                 self.tree_model_file.appendRow([parent_name, parent_text])
         except (OSError, ValueError) as err:
             logging.warning(f"Failed to open file. Error: '{err}'")
@@ -293,9 +275,7 @@ class MainWindow(QMainWindow):
                 child_name.setEditable(False)
                 child_type = QStandardItem("Dataset")
                 child_type.setEditable(False)
-                child_type.setIcon(
-                    QIcon(str(pathlib.Path(self.icon_dir, "dataset.svg")))
-                )
+                child_type.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "dataset.svg"))))
                 parent.appendRow([child_name, child_type])
 
     @pyqtSlot()
@@ -305,21 +285,20 @@ class MainWindow(QMainWindow):
 
         :param str plot_type: Plot Type
         """
-        logging.debug(f"Plot dataset as '{plot_type}'")
-        if (
-            self.cur_file is None
-            or not self.cur_obj_path
-            or not os.path.exists(self.cur_file)
-        ):
+        if self.cur_file is None or not self.cur_obj_path or not os.path.exists(self.cur_file):
             return
 
         with h5py.File(self.cur_file, "r") as file:
-            data = np.array(file[self.cur_obj_path])
-
-        if plot_type and plot_type != "Auto":
-            data_type = H5DatasetType.from_string(plot_type)
-        else:
-            data_type = H5DatasetType.from_numpy_array(data)
+            h5_obj = file[self.cur_obj_path]
+            if isinstance(h5_obj, h5py.Group):
+                data = np.array([name for name in file[self.cur_obj_path]])
+                data_type = H5DatasetType.String
+            if isinstance(h5_obj, h5py.Dataset):
+                data = np.array(file[self.cur_obj_path])
+                if plot_type and plot_type != "Auto":
+                    data_type = H5DatasetType.from_string(plot_type)
+                else:
+                    data_type = H5DatasetType.from_numpy_array(data)
 
         new_widget: QTextBrowser | pg.PlotWidget | pg.ImageView | QTableView | QWidget
         if data_type == H5DatasetType.String:
@@ -424,9 +403,7 @@ class MainWindow(QMainWindow):
         if len(parents_list) == 1:
             self.table_model_dataset.resetData()
             self.table_model_dataset.appendRow(["Name", parents_list[0]])
-            self.table_model_dataset.appendRow(
-                ["File Size", file_size_to_str(parents_list[0])]
-            )
+            self.table_model_dataset.appendRow(["File Size", file_size_to_str(parents_list[0])])
             return
 
         with h5py.File(parents_list[0], "r") as file:
@@ -439,9 +416,7 @@ class MainWindow(QMainWindow):
             elif isinstance(h5_obj, h5py.Dataset):
                 self.table_model_dataset.resetData()
                 self.table_model_dataset.appendRow(["Name", str(h5_obj.name)])
-                self.table_model_dataset.appendRow(
-                    ["Data", f"shape {h5_obj.shape} of type {h5_obj.dtype}"]
-                )
+                self.table_model_dataset.appendRow(["Data", f"shape {h5_obj.shape} of type {h5_obj.dtype}"])
 
                 for attribute, value in h5_obj.attrs.items():
                     self.table_model_dataset.appendRow([attribute, str(value)])
@@ -463,18 +438,14 @@ class MainWindow(QMainWindow):
         else:
             self.tree_view_file.collapseAll()
         self.tree_model_file_proxy.setFilterCaseSensitivity(
-            Qt.CaseSensitivity.CaseSensitive
-            if self.btn_filter_case.isChecked()
-            else Qt.CaseSensitivity.CaseInsensitive
+            Qt.CaseSensitivity.CaseSensitive if self.btn_filter_case.isChecked() else Qt.CaseSensitivity.CaseInsensitive
         )
         if self.btn_filter_regex.isChecked():
             self.tree_model_file_proxy.setFilterRegularExpression(text)
         else:
             self.tree_model_file_proxy.setFilterFixedString(text)
         self.completer.setCaseSensitivity(
-            Qt.CaseSensitivity.CaseSensitive
-            if self.btn_filter_case.isChecked()
-            else Qt.CaseSensitivity.CaseInsensitive
+            Qt.CaseSensitivity.CaseSensitive if self.btn_filter_case.isChecked() else Qt.CaseSensitivity.CaseInsensitive
         )
 
     @pyqtSlot(QPoint)
@@ -485,9 +456,7 @@ class MainWindow(QMainWindow):
         if index.parent().data() is None:
             action = QAction("Close file", self)
             menu.addAction(action)
-            action.triggered.connect(
-                lambda: self.tree_model_file.removeRow(index.row())
-            )
+            action.triggered.connect(lambda: self.tree_model_file.removeRow(index.row()))
 
         if (viewport := self.tree_view_file.viewport()) is not None:
             menu.popup(viewport.mapToGlobal(pos))
@@ -497,15 +466,9 @@ class MainWindow(QMainWindow):
         """Open HDF5 Files."""
         settings = QSettings()
         folder: pathlib.Path = pathlib.Path(
-            settings.value(
-                "paths/last_opened_file_directory", defaultValue=os.path.expanduser("~")
-            )
+            settings.value("paths/last_opened_file_directory", defaultValue=os.path.expanduser("~"))
         )
-        default_path = (
-            str(folder.absolute())
-            if folder.absolute().exists()
-            else os.path.expanduser("~")
-        )
+        default_path = str(folder.absolute()) if folder.absolute().exists() else os.path.expanduser("~")
         file_paths, _ = QFileDialog.getOpenFileNames(
             self,
             "Open File",
@@ -515,9 +478,7 @@ class MainWindow(QMainWindow):
         if not file_paths:
             return
 
-        settings.setValue(
-            "paths/last_opened_file_directory", pathlib.Path(file_paths[0]).parent
-        )
+        settings.setValue("paths/last_opened_file_directory", pathlib.Path(file_paths[0]).parent)
         for file in file_paths:
             self._open_file(pathlib.Path(file))
 
@@ -529,20 +490,12 @@ class MainWindow(QMainWindow):
             "paths/last_opened_folder_directory",
             defaultValue=pathlib.Path(os.path.expanduser("~")),
         )
-        default_path = (
-            str(folder.absolute())
-            if folder.absolute().exists()
-            else os.path.expanduser("~")
-        )
-        folder_path = QFileDialog.getExistingDirectory(
-            self, "Open Folder", default_path
-        )
+        default_path = str(folder.absolute()) if folder.absolute().exists() else os.path.expanduser("~")
+        folder_path = QFileDialog.getExistingDirectory(self, "Open Folder", default_path)
         if not folder_path:
             return
 
-        settings.setValue(
-            "paths/last_opened_folder_directory", pathlib.Path(folder_path)
-        )
+        settings.setValue("paths/last_opened_folder_directory", pathlib.Path(folder_path))
         for file in os.listdir(folder_path):
             self._open_file(pathlib.Path(folder_path, file))
 

@@ -57,11 +57,7 @@ class H5DatasetType(Enum):
         if arr_shape == 1 and ("int" in arr_type or "float" in arr_type):
             return cls.Array1D
 
-        if (
-            arr_shape == 2
-            and ("int" in arr_type or "float" in arr_type)
-            and arr_size < 100
-        ):
+        if arr_shape == 2 and ("int" in arr_type or "float" in arr_type) and arr_size < 100:
             return cls.Table
 
         if arr_shape == 3 and ("int" in arr_type or "float" in arr_type):

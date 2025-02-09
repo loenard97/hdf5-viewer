@@ -1,7 +1,7 @@
 <div align="center">
 
 # HDF5 File Viewer
-A python based file viewer for HDF5 files
+A Python based file viewer for HDF5 files
 
 ![last commit](https://img.shields.io/github/last-commit/loenard97/hdf5-viewer?&style=for-the-badge&logo=github&color=3776AB)
 ![repo size](https://img.shields.io/github/repo-size/loenard97/hdf5-viewer?&style=for-the-badge&logo=github&color=3776AB)

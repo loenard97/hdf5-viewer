@@ -65,9 +65,7 @@ class TableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             return self._data[index.row()][index.column()]
 
-    def setData(
-        self, index: QModelIndex, value: str, role: int = Qt.ItemDataRole.EditRole
-    ) -> bool:
+    def setData(self, index: QModelIndex, value: str, role: int = Qt.ItemDataRole.EditRole) -> bool:
         """Set Data when Cell is edited."""
         if role != Qt.ItemDataRole.EditRole:
             return False
@@ -121,9 +119,7 @@ class DataTable(QAbstractTableModel):
         """Get Column Count."""
         return int(self._data.shape[1])
 
-    def data(
-        self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole
-    ) -> None | float:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> None | float:
         """Get Data, Alignment, Colors etc. depending on Role."""
         if role == Qt.ItemDataRole.DisplayRole:
             return float(self._data[index.row()][index.column()])

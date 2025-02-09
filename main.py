@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
-import os
+import logging.config
 import sys
 
 from PyQt6.QtWidgets import QApplication
 
 from src.gui.main_window import MainWindow
+from src.logging_config import logging_config
 
 if sys.platform == "win32":
     # Set Windows Taskbar Icon
@@ -29,27 +29,12 @@ if sys.platform == "win32":
 
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("hdf5viewer")
 
-if "--debug" in sys.argv:
-    logging.basicConfig(
-        level=0,
-        format="%(asctime)s: [%(levelname)s] - %(message)s",
-        handlers=[
-            logging.FileHandler(os.path.join("hdf5viewer.log")),
-            logging.StreamHandler(sys.stdout),
-        ],
-        force=True,
-    )
-else:
-    logging.basicConfig(
-        level=20,
-        format="%(asctime)s: [%(levelname)s] - %(message)s",
-        handlers=[logging.StreamHandler(sys.stdout)],
-        force=True,
-    )
-
 
 def main() -> None:
     """HDF5 File Viewer entry point."""
+    logging.config.dictConfig(logging_config)
+    logging.info("Starting GUI...")
+
     app = QApplication(sys.argv)
     app.setOrganizationName("HDF5Viewer")
     app.setApplicationName("HDF5ViewerPython")

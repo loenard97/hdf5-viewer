@@ -16,13 +16,9 @@ def main() -> None:
         file.create_dataset("Array1D/Integer", data=np.array([1, 2, 3, 4, 5]))
 
         # raveled np arrays
-        file.create_dataset(
-            "Array1D/ColumnVector", data=np.array([[1], [2], [3], [4], [5]])
-        )
+        file.create_dataset("Array1D/ColumnVector", data=np.array([[1], [2], [3], [4], [5]]))
         file.create_dataset("Array1D/RowVector", data=np.array([[1, 2, 3, 4, 5]]))
-        file.create_dataset(
-            "Array1D/LongRowVector", data=np.array([[i for i in range(150)]])
-        )
+        file.create_dataset("Array1D/LongRowVector", data=np.array([[i for i in range(150)]]))
 
 
 if __name__ == "__main__":

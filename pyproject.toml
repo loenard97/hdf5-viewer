@@ -1,8 +1,10 @@
 [tool.isort]
 profile = "black"
+line_length = 120
 src_paths = ["src", "main.py"]
 
 [tool.black]
+line-length = 120
 
 [tool.flake8]
 max-line-length = 120
@@ -10,7 +12,7 @@ ignore = "D401"
 
 [tool.mypy]
 mypy_path = "src"
-exclude = ["venv"]
+exclude = ["venv", "dist"]
 allow_untyped_globals = false
 allow_redefinition = false
 check_untyped_defs = true

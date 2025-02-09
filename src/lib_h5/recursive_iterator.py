@@ -37,9 +37,7 @@ def recursive_h5(file_path: pathlib.Path) -> list[tuple[str, int, bool]]:
     return item_list
 
 
-def recursive_group(
-    file_path: pathlib.Path, group: str, depth: int
-) -> list[tuple[str, int, bool]]:
+def recursive_group(file_path: pathlib.Path, group: str, depth: int) -> list[tuple[str, int, bool]]:
     """Iterate recursively through group."""
     item_list = []
     with h5py.File(file_path, "r") as file:
