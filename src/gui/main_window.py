@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
         self.dock_table.setWidget(self.table_view_dataset)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_table)
         self.dock_plot = QDockWidget()
-        self.dock_plot.setWindowTitle("Plot")
+        self.dock_plot.setWindowTitle("Data")
         self.dock_plot.setWidget(self.plot_wgt_dataset)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_plot)
 
@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
         self.tree_view_file.setModel(self.tree_model_file_proxy)
         self.tree_view_file.setColumnWidth(0, 500)
         self.tree_view_file.setAcceptDrops(True)
-        self.tree_view_file.activated.connect(self._handle_item_changed)
+        self.tree_view_file.clicked.connect(self._handle_item_changed)
 
         # # self._tw_file.setSelectionMode(QAbstractItemView.selectionMode(self._tw_file).ExtendedSelection)
         # # self._tw_file.setAlternatingRowColors(True)
@@ -453,6 +453,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(QPoint)
     def _handle_tree_menu(self, pos: QPoint) -> None:
+        # TODO: reload file button
         menu = QMenu(self)
         index = self.tree_view_file.indexAt(pos)
         if index.parent().data() is None:
