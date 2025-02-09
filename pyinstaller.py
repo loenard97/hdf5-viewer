@@ -33,6 +33,8 @@ def build() -> None:
     ]
     if platform == "windows":
         build_args.append("--icon=src/img/file.ico")
+    else:
+        build_args.append("--onefile")
 
     PyInstaller.__main__.run(build_args)
 
