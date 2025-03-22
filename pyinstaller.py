@@ -27,7 +27,6 @@ def build() -> None:
         "--noconfirm",
         "--windowed",
         "--add-data=src/img/*:img",
-        "--add-data=src/html/*:html",
         "--add-data=LICENSE:.",
         "--add-data=README.md:.",
     ]

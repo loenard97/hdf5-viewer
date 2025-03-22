@@ -26,7 +26,7 @@ def img_path() -> pathlib.Path:
     """
     if getattr(sys, "frozen", False):
         path = pathlib.Path(sys.executable).parent
-        path = pathlib.Path(path, "img")
+        path = pathlib.Path(path, "_internal", "img")
     else:
         path = pathlib.Path(__file__).absolute().parent
 

@@ -27,21 +27,21 @@ logging_config = {
             "formatter": "simple",
             "stream": "ext://sys.stdout",
         },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "simple",
-            "filename": "hdf5fileviewer.log",
-            "maxBytes": 100_000,
-            "backupCount": 3,
-        },
+        # "file": {
+        #     "class": "logging.handlers.RotatingFileHandler",
+        #     "level": "DEBUG",
+        #     "formatter": "simple",
+        #     "filename": "hdf5fileviewer.log",
+        #     "maxBytes": 100_000,
+        #     "backupCount": 3,
+        # },
     },
     "loggers": {
         "root": {
             "level": "DEBUG",
             "handlers": [
                 "stdout",
-                "file",
+                # "file",
             ],
         }
     },

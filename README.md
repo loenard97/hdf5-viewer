@@ -18,13 +18,11 @@ They are widely used in Industry and Academia to store large sets of raw data.
  - Open, or simply Drag&Drop, h5 files to view all groups and datasets
  - Supports remote files on a NAS for example
  - Display datasets as graphs or text
- - Export files to various other file formats
+ - Export files to various other file formats, like .csv (Right-click on a plot to export)
  - Filter list of Datasets by name
 
 Files can be opened either by double-clicking, drag-and-drop or via the File menu.
 ![Screenshot](src/img/screenshot.jpg)
-
-Right-click on a plot in the bottom right to export the dataset to various other formats, like .csv.
 
 
 ## ▶️ Installation

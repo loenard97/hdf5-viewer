@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
 
         self.btn_filter_regex = QPushButton("RegExp")
         self.btn_filter_regex.setCheckable(True)
-        self.btn_filter_regex.clicked.connect(self._handle_filter_changed)  
+        self.btn_filter_regex.clicked.connect(self._handle_filter_changed)
         self.btn_filter_case = QPushButton("Cc")
         self.btn_filter_case.setCheckable(True)
         self.btn_filter_case.clicked.connect(self._handle_filter_changed)
