@@ -1,4 +1,4 @@
-"""File size formatting util."""
+"""Configs."""
 
 # Copyright (C) 2023 Dennis Lönard
 #
@@ -14,19 +14,3 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-import os
-
-
-def file_size_to_str(file_path: str) -> str:
-    """Get formatted file size."""
-    size = os.path.getsize(file_path)
-
-    if size > 1024**3:
-        return f"{size/1024**3:.2f} GB"
-    elif size > 1024**2:
-        return f"{size/1024**2:.2f} MB"
-    elif size > 1024:
-        return f"{size/1024:.2f} kB"
-    else:
-        return f"{size} bytes"

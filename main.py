@@ -16,15 +16,16 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging.config
+import pathlib
 import sys
 
-import pyqtgraph
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QFont, QFontDatabase, QPalette
+import pyqtgraph as pg
 from PyQt6.QtWidgets import QApplication
 
-from src.gui.main_window import MainWindow
-from src.logging_config import logging_config
+from src.config.font import create_font
+from src.config.logging import create_logging_config
+from src.config.palette import create_color_palette
+from src.gui.main_window.main_window import MainWindow
 
 if sys.platform == "win32":
     # Set Windows Taskbar Icon
@@ -35,50 +36,29 @@ if sys.platform == "win32":
 
 def main() -> None:
     """HDF5 File Viewer entry point."""
-
+    logging_config = create_logging_config()
     logging.config.dictConfig(logging_config)
-    logging.info("Starting GUI...")
 
-    app = QApplication(sys.argv)
-    app.setStyle("Fusion")
+    app = QApplication(sys.argv)  # QApplication has to be created before palette and font are created
 
-    palette = QPalette()
-    palette.setColor(QPalette.ColorRole.Window, QColor(245, 245, 246))
-    palette.setColor(QPalette.ColorRole.WindowText, QColor.fromString("black"))
-    palette.setColor(QPalette.ColorRole.Base, QColor(219, 223, 229))
-    palette.setColor(QPalette.ColorRole.AlternateBase, QColor(219, 223, 229))
-    palette.setColor(QPalette.ColorRole.ToolTipBase, QColor.fromString("black"))
-    palette.setColor(QPalette.ColorRole.ToolTipText, QColor.fromString("black"))
-    palette.setColor(QPalette.ColorRole.Text, QColor.fromString("black"))
-    palette.setColor(QPalette.ColorRole.Button, QColor(219, 223, 229))
-    palette.setColor(QPalette.ColorRole.ButtonText, QColor.fromString("black"))
-    palette.setColor(QPalette.ColorRole.BrightText, QColor.fromString("red"))
-
-    palette.setColor(QPalette.ColorRole.Highlight, QColor(112, 175, 234))
-    palette.setColor(QPalette.ColorRole.HighlightedText, QColor.fromString("black"))
-
-    with open("styles/style.css", "r") as file:
-        css = file.read()
-
-    pyqtgraph.setPalette(app, palette)
-    app.setPalette(palette)
-    app.setStyleSheet(css)
-
-    # Load font from file
-    font_id = QFontDatabase.addApplicationFont("fonts/NotoSans/NotoSans-Regular.ttf")
-    if font_id < 0:
-        print("Failed to load font!")
-    else:
-        families = QFontDatabase.applicationFontFamilies(font_id)
-        print("Loaded font families:", families)
-        # Use the first family name
-        edwin_font = QFont(families[0], 10)
-        app.setFont(edwin_font)
+    palette = create_color_palette()
+    font = create_font()
+    with pathlib.Path("styles/style.css").open() as file:
+        style_sheet = file.read()
 
     app.setOrganizationName("HDF5Viewer")
-    app.setApplicationName("HDF5ViewerPython")
+    app.setApplicationName("HDF5 File Viewer")
+    app.setStyle("Fusion")
+    app.setPalette(palette)
+    app.setStyleSheet(style_sheet)
+    app.setFont(font)
+
+    pg.setPalette(app, palette)
+    pg.setConfigOption(opt="background", value="#dbdfe5")
+    pg.setConfigOption(opt="foreground", value="#000000")
+    pg.setConfigOption(opt="antialias", value=True)
+
     main_win = MainWindow()
-    main_win.setWindowFlags(Qt.WindowType.FramelessWindowHint)
     main_win.show()
     sys.exit(app.exec())
 

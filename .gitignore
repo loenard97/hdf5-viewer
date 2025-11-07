@@ -1,26 +1,18 @@
-/.idea
-/.mypy_cache
-/.pytest_cache
-/.tox
-/venv
-/build
-/dist
-/out
-/debian/.debhelper
-/debian/hdf5viewer
-/package
-/{envtempdir}
+# Python-generated files
+__pycache__/
+.venv
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Hugo pages
 /pages/public
 /pages/.hugo_build.lock
-*__pycache__*
-*.egg-info*
-*.exe
-*.spec
-*.h5
-*.hdf5
-*.csv
-*.npy
-*.png
-*.coverage
-*.log
-test.py
+
+# PyInstaller
+main.spec
+
+# PyCharm
+.idea

@@ -1,10 +1,6 @@
-PyQt6==6.7.0
-PyQt6-Qt6==6.7.0
-PyQt6_sip==13.10.
-h5py==3.11.0
-numpy==2.0.0
-pyqtgraph==0.13.7
-pyinstaller==6.9.0
-natsort==8.4.0
-matplotlib==3.9.1
-setuptools==70.3.0
+h5py>=3.15.1
+natsort>=8.4.0
+numpy>=2.3.4
+pyqt6>=6.10.0
+pyqt6-sip>=13.10.2
+pyqtgraph>=0.13.7

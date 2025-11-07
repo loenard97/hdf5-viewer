@@ -1,4 +1,4 @@
-"""Image path utils."""
+"""Font configs."""
 
 # Copyright (C) 2023 Dennis Lönard
 #
@@ -15,21 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
-import pathlib
-import sys
+from PyQt6.QtGui import QFont, QFontDatabase
 
 
-def img_path() -> pathlib.Path:
-    """
-    Get path to img directory
-    """
-    if getattr(sys, "frozen", False):
-        path = pathlib.Path(sys.executable).parent
-        path = pathlib.Path(path, "_internal", "img")
-    else:
-        path = pathlib.Path(__file__).absolute().parent
+def create_font() -> QFont:
+    """Create font used for the QApplication."""
+    font_size = 10
+    font_id = QFontDatabase.addApplicationFont("fonts/NotoSans/NotoSans-Regular.ttf")
+    font_families = QFontDatabase.applicationFontFamilies(font_id)
 
-    logging.info(f"Image path '{path}'")
-
-    return path
+    return QFont(font_families[0], font_size)

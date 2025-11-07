@@ -1,4 +1,4 @@
-"""H5 File related functions and types."""
+"""Main Window of the GUI."""
 
 # Copyright (C) 2023 Dennis Lönard
 #

@@ -1,18 +1,33 @@
-[tool.isort]
-profile = "black"
-line_length = 120
-src_paths = ["src", "main.py"]
+[project]
+name = "HDF5-File-Viewer"
+version = "1.0.0"
+description = "File Viewer for HDF5 Files"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "h5py>=3.15.1",
+    "natsort>=8.4.0",
+    "numpy>=2.3.4",
+    "pyqt6>=6.10.0",
+    "pyqtgraph>=0.13.7",
+]
 
-[tool.black]
+[tool.ruff]
 line-length = 120
+output-format = "concise"
 
-[tool.flake8]
-max-line-length = 120
-ignore = "D401"
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203",  # conflicts with D211
+    "D212",  # conflicts with D213
+    "COM812",  # is fixed automatically by formatter
+    "ERA001",  # TODO commented out code
+]
 
 [tool.mypy]
 mypy_path = "src"
-exclude = ["venv", "dist"]
+exclude = [".venv", "dist"]
 allow_untyped_globals = false
 allow_redefinition = false
 check_untyped_defs = true
