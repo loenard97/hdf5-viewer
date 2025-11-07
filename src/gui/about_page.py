@@ -20,7 +20,7 @@ import pathlib
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QTextBrowser, QVBoxLayout, QWidget
 
-from img.img_path import img_path
+from src.img.img_path import img_path
 
 
 class AboutPage(QWidget):

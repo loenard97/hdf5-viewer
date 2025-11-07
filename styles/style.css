@@ -1,0 +1,128 @@
+QPushButton {
+    border: 1px solid #dbdfe5;
+    background-color: #dbdfe5;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+QPushButton:hover {
+    background-color: #50545C;
+}
+QPushButton:pressed {
+    background-color: #3C3F45;
+}
+
+
+QComboBox {
+    border: 1px solid #dbdfe5;
+    background-color: #dbdfe5;
+    border-radius: 4px;
+    padding: 4px;
+    selection-background-color: #e0e0e0; /* optional hover highlight */
+    qproperty-alignment: 'AlignCenter';
+}
+
+QComboBox QAbstractItemView {
+    qproperty-textAlignment: 'AlignCenter';
+}
+
+/* Remove the arrow button look
+QComboBox::drop-down {
+    border: none;
+    background: transparent;
+    width: 16px;
+} */
+
+/* Hide or restyle the down arrow
+QComboBox::down-arrow {
+    image: none;  /* removes the arrow entirely */
+    /* OR use your own: image: url(your_icon.svg); */
+} */
+
+/* Style the popup list */
+QComboBox QAbstractItemView {
+    border: none;
+    background: white;
+    selection-background-color: #f0f0f0;
+}
+
+
+QTableView {
+    border: none;
+    background: white;
+    gridline-color: #e0e0e0;   /* subtle grid */
+    selection-background-color: #f0f0f0;
+    selection-color: black;
+}
+
+QTreeView {
+    border: none;
+    background: white;
+    gridline-color: #e0e0e0;   /* subtle grid */
+    selection-background-color: #f0f0f0;
+    selection-color: black;
+}
+
+/* Header styling */
+QHeaderView::section {
+    border: none;
+    background: #f9f9f9;
+    padding: 4px;
+    font-weight: normal;
+}
+
+/* Remove focus rectangle */
+QTableView::item:focus {
+    outline: none;
+}
+
+
+/* Horizontal scrollbar */
+QScrollBar:horizontal {
+    border: none;
+    background: #f5f5f5;
+    height: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #c0c0c0;
+    min-width: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #a0a0a0;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    border: none;
+    background: none;
+    width: 0px;  /* remove arrow buttons */
+}
+
+/* Vertical scrollbar */
+QScrollBar:vertical {
+    border: none;
+    background: #f5f5f5;
+    width: 8px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #c0c0c0;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #a0a0a0;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;  /* remove arrow buttons */
+}
+

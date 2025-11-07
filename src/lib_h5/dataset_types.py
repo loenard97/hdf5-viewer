@@ -29,6 +29,8 @@ class H5DatasetType(Enum):
     Array2D = auto()
     ImageRGB = auto()
     Table = auto()
+    File = auto()
+    Group = auto()
 
     @classmethod
     def from_string(cls, plot_type: str) -> "H5DatasetType":

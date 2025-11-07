@@ -89,10 +89,7 @@ class TableModel(QAbstractTableModel):
             self.removeRow(0)
 
     def headerData(
-        self,
-        section: int,
-        orientation: Qt.Orientation,
-        role: int = Qt.ItemDataRole.DisplayRole,
+        self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole
     ) -> None | str | int:
         """Get Headers for horizontal | vertical Orientation."""
         if role == Qt.ItemDataRole.DisplayRole:

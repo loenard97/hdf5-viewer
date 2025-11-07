@@ -22,10 +22,9 @@ import sys
 from typing import Any, Generator
 
 import h5py
-import numpy as np
 import pyqtgraph as pg
 from natsort import natsorted
-from PyQt6.QtCore import QModelIndex, QPoint, QSettings, QSize, QSortFilterProxyModel, Qt, pyqtSlot
+from PyQt6.QtCore import QEvent, QModelIndex, QPoint, QSettings, QSize, QSortFilterProxyModel, Qt, pyqtSlot
 from PyQt6.QtGui import (
     QAction,
     QCloseEvent,
@@ -40,7 +39,6 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import (
     QComboBox,
     QCompleter,
-    QDockWidget,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
@@ -48,18 +46,19 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QPushButton,
-    QTableView,
-    QTextBrowser,
     QTreeView,
     QVBoxLayout,
     QWidget,
 )
 
 from src.gui.about_page import AboutPage
-from src.gui.table_model import DataTable, TableModel
+from src.gui.data_widgets.factory import DataWidgetFactory
+from src.gui.title_bar import CustomTitleBar
 from src.img.img_path import img_path
-from src.lib_h5.dataset_types import H5DatasetType
-from src.lib_h5.file_size import file_size_to_str
+
+pg.setConfigOption("background", "#dbdfe5")
+pg.setConfigOption("foreground", "#000000")
+pg.setConfigOption("antialias", True)
 
 
 class MainWindow(QMainWindow):
@@ -69,6 +68,7 @@ class MainWindow(QMainWindow):
         """Start Main Window of the GUI."""
         super().__init__(flags=Qt.WindowType.Window)
         self.setAcceptDrops(True)
+        self.title_bar = CustomTitleBar(self)
 
         # Variables
         self.cur_file = pathlib.Path()
@@ -81,37 +81,23 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("HDF5 Viewer")
         self.resize(settings.value("main_window/size", defaultValue=QSize(1400, 700)))
         self.move(settings.value("main_window/position", defaultValue=QPoint(300, 150)))
+        self.resize(QSize(1400, 700))
+        self.move(QPoint(300, 150))
         self.setWindowIcon(QIcon(str(pathlib.Path(self.icon_dir, "file.svg"))))
 
-        # Layout Right Side
-        self.table_model_dataset = TableModel(header=["Attribute", "Value"])
-        self.table_view_dataset = QTableView()
-        self.table_view_dataset.setMinimumWidth(700)
-        self.table_view_dataset.setModel(self.table_model_dataset)
-        self.table_view_dataset.setColumnWidth(1, 300)
-        self.plot_wgt_dataset = pg.PlotWidget()
-
-        self.dock_table = QDockWidget()
-        self.dock_table.setWindowTitle("Attributes")
-        self.dock_table.setWidget(self.table_view_dataset)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_table)
-        self.dock_plot = QDockWidget()
-        self.dock_plot.setWindowTitle("Data")
-        self.dock_plot.setWidget(self.plot_wgt_dataset)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock_plot)
-
-        # Center Layout
+        # Layout Left Side
         self.tree_view_file = QTreeView()
+        self.tree_view_file.setHeaderHidden(True)
         self.tree_view_file.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree_view_file.customContextMenuRequested.connect(self._handle_tree_menu)
         self.tree_model_file = QStandardItemModel()
         self.tree_model_file.setHorizontalHeaderLabels(["Name", "Type"])
         self.tree_model_file_proxy = QSortFilterProxyModel()
         self.tree_model_file_proxy.setRecursiveFilteringEnabled(True)
-
         self.tree_model_file_proxy.setSourceModel(self.tree_model_file)
         self.tree_view_file.setModel(self.tree_model_file_proxy)
-        self.tree_view_file.setColumnWidth(0, 500)
+        # tree.header().setSectionResizeMode(0, QHeaderView.Fixed)
+        self.tree_view_file.setColumnWidth(0, 1500)
         self.tree_view_file.setAcceptDrops(True)
         self.tree_view_file.clicked.connect(self._handle_item_changed)
 
@@ -131,64 +117,123 @@ class MainWindow(QMainWindow):
         self.le_filter.setCompleter(self.completer)
 
         lyt_plot_type = QFormLayout()
+        # lyt_plot_type.addRow("Plot as", self.cb_plot_type)
+
+        lyt_filter = QHBoxLayout()
+        # lyt_filter.addWidget(self.btn_filter_regex)
+        # lyt_filter.addWidget(self.btn_filter_case)
+        # lyt_filter.addWidget(self.le_filter)
+        btn_open_file = QPushButton("Open File...")
+        btn_open_file.clicked.connect(self._handle_action_open_file)
+        lyt_filter.addWidget(btn_open_file)
+
+        lyt_file_tree = QVBoxLayout()
+        lyt_file_tree.addLayout(lyt_filter)
+        lyt_file_tree.addWidget(self.tree_view_file)
+        lyt_file_tree.addLayout(lyt_plot_type)
+
+        # Layout Right Side
+        self.lyt_right_side = QVBoxLayout()
+        # self.table_model_dataset = TableModel(header=["Attribute", "Value"])
+        # self.table_view_dataset = QTableView()
+        # self.table_view_dataset.setMinimumWidth(700)
+        # self.table_view_dataset.setModel(self.table_model_dataset)
+        # self.table_view_dataset.setColumnWidth(1, 300)
+        # lyt_right_side.addWidget(self.table_view_dataset)
+
         self.cb_plot_type = QComboBox()
         self.cb_plot_type.addItems(["Auto", "String", "Array1D", "Array2D", "ImageRGB", "Table"])
         self.cb_plot_type.currentTextChanged.connect(self._handle_plot_type_changed)
-        lyt_plot_type.addRow("Plot as", self.cb_plot_type)
+        self.lyt_right_side.addWidget(self.cb_plot_type)
 
-        lyt_filter = QHBoxLayout()
-        lyt_filter.addWidget(self.btn_filter_regex)
-        lyt_filter.addWidget(self.btn_filter_case)
-        lyt_filter.addWidget(self.le_filter)
+        self.plot_wgt_dataset = pg.PlotWidget()
+        self.lyt_right_side.addWidget(self.plot_wgt_dataset)
 
-        lyt_file_tree = QVBoxLayout()
-        lyt_file_tree.addWidget(self.tree_view_file)
-        lyt_file_tree.addLayout(lyt_filter)
-        lyt_file_tree.addLayout(lyt_plot_type)
+        # Total Window Layout
+        lyt_content = QHBoxLayout()
+        lyt_content.setContentsMargins(6, 6, 6, 6)
+        lyt_content.addLayout(lyt_file_tree)
+        lyt_content.addLayout(self.lyt_right_side)
 
-        wgt_total = QHBoxLayout()
-        wgt_total.addLayout(lyt_file_tree)
-        # wgt_total.addLayout(self.lyt_dataset)
+        lyt_central = QVBoxLayout()
+        # lyt_central.setContentsMargins(11, 11, 11, 11)
+        lyt_central.setContentsMargins(0, 0, 0, 0)
+        lyt_central.addWidget(self.title_bar)
+        lyt_central.addLayout(lyt_content)
+        lyt_central.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         wgt_central = QWidget()
-        wgt_central.setLayout(wgt_total)
+        wgt_central.setLayout(lyt_central)
         self.setCentralWidget(wgt_central)
 
-        # File Menu
-        if (menu_bar := self.menuBar()) is None:
-            return
-        if (mbr_file := menu_bar.addMenu("&File")) is not None:
-            act_file = QAction("&Open File...", self)
-            act_file.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file.svg"))))
-            act_file.setShortcut("Ctrl+O")
-            act_file.triggered.connect(self._handle_action_open_file)
-            mbr_file.addAction(act_file)
-            act_open_folder = QAction("&Open Folder...", self)
-            act_open_folder.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "group.svg"))))
-            act_open_folder.triggered.connect(self._handle_action_open_folder)
-            mbr_file.addAction(act_open_folder)
-            act_clear_files = QAction("&Close all Files", self)
-            act_clear_files.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file_clear.svg"))))
-            act_clear_files.triggered.connect(self._handle_action_clear_files)
-            mbr_file.addAction(act_clear_files)
-            mbr_file.addSeparator()
-            act_quit = QAction("&Quit", self)
-            act_quit.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "quit.svg"))))
-            act_quit.setShortcut("Ctrl+Q")
-            act_quit.triggered.connect(self._handle_close)
-            mbr_file.addAction(act_quit)
-
-        # Help Menu
-        if (mbr_help := menu_bar.addMenu("&Help")) is not None:
-            act_about = QAction("&About Page...", self)
-            act_about.setIcon(QIcon(os.path.join(self.icon_dir, "about.svg")))
-            act_about.triggered.connect(self._handle_action_about)
-            mbr_help.addAction(act_about)
+        # if (menu_bar := self.menuBar()) is None:
+        #     return
+        #
+        # # File Menu
+        # if (mbr_file := menu_bar.addMenu("&File")) is not None:
+        #     act_file = QAction("&Open File...", self)
+        #     act_file.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file.svg"))))
+        #     act_file.setShortcut("Ctrl+O")
+        #     act_file.triggered.connect(self._handle_action_open_file)
+        #     mbr_file.addAction(act_file)
+        #     act_open_folder = QAction("&Open Folder...", self)
+        #     act_open_folder.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "group.svg"))))
+        #     act_open_folder.triggered.connect(self._handle_action_open_folder)
+        #     mbr_file.addAction(act_open_folder)
+        #     act_clear_files = QAction("&Close all Files", self)
+        #     act_clear_files.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "file_clear.svg"))))
+        #     act_clear_files.triggered.connect(self._handle_action_clear_files)
+        #     mbr_file.addAction(act_clear_files)
+        #     mbr_file.addSeparator()
+        #     act_quit = QAction("&Quit", self)
+        #     act_quit.setIcon(QIcon(str(pathlib.Path(self.icon_dir, "quit.svg"))))
+        #     act_quit.setShortcut("Ctrl+Q")
+        #     act_quit.triggered.connect(self._handle_close)
+        #     mbr_file.addAction(act_quit)
+        #
+        # # Help Menu
+        # if (mbr_help := menu_bar.addMenu("&Help")) is not None:
+        #     act_about = QAction("&About Page...", self)
+        #     act_about.setIcon(QIcon(os.path.join(self.icon_dir, "about.svg")))
+        #     act_about.triggered.connect(self._handle_action_about)
+        #     mbr_help.addAction(act_about)
 
         # Open File when double-clicking
-        if len(sys.argv) > 1:
-            self._open_file(pathlib.Path(sys.argv[0]))
-        for file in settings.value("settings/last_opened_files", ()):
-            self._open_file(file)
+        # if len(sys.argv) > 1:
+        #     self._open_file(pathlib.Path(sys.argv[0]))
+        # for file in settings.value("settings/last_opened_files", ()):
+        #     self._open_file(file)
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.Type.WindowStateChange:
+            self.title_bar.window_state_changed(self.windowState())
+        super().changeEvent(event)
+        event.accept()
+
+    def window_state_changed(self, state):
+        self.normal_button.setVisible(state == Qt.WindowState.WindowMaximized)
+        self.max_button.setVisible(state != Qt.WindowState.WindowMaximized)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.initial_pos = event.pos()
+        super().mousePressEvent(event)
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self.initial_pos is not None:
+            delta = event.pos() - self.initial_pos
+            self.window().move(
+                self.window().x() + delta.x(),
+                self.window().y() + delta.y(),
+            )
+        super().mouseMoveEvent(event)
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self.initial_pos = None
+        super().mouseReleaseEvent(event)
+        event.accept()
 
     @staticmethod
     def iter_items(root: QStandardItem) -> Generator[Any, Any, None]:
@@ -224,12 +269,13 @@ class MainWindow(QMainWindow):
                 file_paths.append(pathlib.Path(item.text()))
         return tuple(file_paths)
 
-    def _open_file(self, file_path: pathlib.Path) -> None:
+    def open_file(self, file_path: pathlib.Path) -> None:
         """
         Open one File.
 
         :param str file_path: File Path
         """
+        self._handle_action_clear_files()
         logging.info(f"Open file '{file_path}'")
         try:
             # Load TreeModel from File
@@ -252,6 +298,8 @@ class MainWindow(QMainWindow):
                 else Qt.CaseSensitivity.CaseInsensitive
             )
             self.le_filter.setCompleter(self.completer)
+
+        self.tree_view_file.setColumnWidth(0, 500)
 
     def _hdf5_recursion(
         self,
@@ -279,77 +327,23 @@ class MainWindow(QMainWindow):
                 parent.appendRow([child_name, child_type])
 
     @pyqtSlot()
-    def _plot_data(self, plot_type: str = "") -> None:
+    def plot_data(self, plot_type: str = "") -> None:
         """
         Update Plot Widget.
 
         :param str plot_type: Plot Type
         """
-        if self.cur_file is None or not self.cur_obj_path or not os.path.exists(self.cur_file):
+        if self.cur_file is None or not os.path.exists(self.cur_file):
             return
 
-        with h5py.File(self.cur_file, "r") as file:
-            h5_obj = file[self.cur_obj_path]
-            if isinstance(h5_obj, h5py.Group):
-                data = np.array([name for name in file[self.cur_obj_path]])
-                data_type = H5DatasetType.String
-            if isinstance(h5_obj, h5py.Dataset):
-                data = np.array(file[self.cur_obj_path])
-                if plot_type and plot_type != "Auto":
-                    data_type = H5DatasetType.from_string(plot_type)
-                else:
-                    data_type = H5DatasetType.from_numpy_array(data)
+        # create new data widget depending on what type of data to show
+        new_widget = DataWidgetFactory.get_data_widget_from_data(self.cur_file, self.cur_obj_path, plot_type)
 
-        new_widget: QTextBrowser | pg.PlotWidget | pg.ImageView | QTableView | QWidget
-        if data_type == H5DatasetType.String:
-            if data.ndim == 0:
-                label = data.item()
-                if isinstance(label, bytes):
-                    label = label.decode()
-                label = str(label)
-            else:
-                label = str(data)
-            new_widget = QTextBrowser()
-            new_widget.setText(label)
-        elif data_type == H5DatasetType.Array1D:
-            if data.ndim == 2 and min(data.shape) == 1:
-                data = data.ravel()
-            new_widget = pg.PlotWidget()
-            try:
-                new_widget.plot(data)
-            except Exception as err:
-                logging.error(f"Failed plot dataset as '{plot_type}'. Error: '{err}'")
-                return
-        elif data_type == H5DatasetType.Array2D:
-            new_widget = pg.ImageView()
-            try:
-                new_widget.setImage(data)
-            except Exception as err:
-                logging.error(f"Failed plot dataset as '{plot_type}'. Error: '{err}'")
-                return
-            new_widget.setColorMap(pg.colormap.get("inferno"))
-        elif data_type == H5DatasetType.Table:
-            new_widget = QTableView()
-            model = DataTable(data)
-            new_widget.setModel(model)
-        elif data_type == H5DatasetType.ImageRGB:
-            data = np.sum(data, axis=0)
-            new_widget = pg.ImageView()
-            try:
-                new_widget.setImage(data)
-            except Exception as err:
-                logging.error(f"Failed plot dataset as '{plot_type}'. Error: '{err}'")
-                return
-            new_widget.setColorMap(pg.colormap.get("inferno"))
-        else:
-            new_widget = QWidget()
-
-        # Replace old Plot Widget
-        self.dock_plot.setWidget(new_widget)
-        # self.lyt_dataset.replaceWidget(self.plot_wgt_dataset, new_widget)
-        # self.plot_wgt_dataset.hide()
-        # self.plot_wgt_dataset.destroy()
-        # self.plot_wgt_dataset = new_widget
+        # replace old data widget
+        self.lyt_right_side.replaceWidget(self.plot_wgt_dataset, new_widget)
+        self.plot_wgt_dataset.hide()
+        self.plot_wgt_dataset.destroy()
+        self.plot_wgt_dataset = new_widget
 
     # ----- Drag & Drop ----- #
     def dragEnterEvent(self, event: QDragEnterEvent | None) -> None:
@@ -376,18 +370,20 @@ class MainWindow(QMainWindow):
                 file = file[8:]
             else:
                 file = file.removeprefix("file:")
-            self._open_file(pathlib.Path(file))
+            self.open_file(pathlib.Path(file))
         event.acceptProposedAction()
 
     # ----- Slots ----- #
     @pyqtSlot(str)
     def _handle_plot_type_changed(self, plot_type: str) -> None:
         """Update plot when new plot type is selected."""
-        self._plot_data(plot_type)
+        self.plot_data(plot_type)
 
     @pyqtSlot(QModelIndex)
     def _handle_item_changed(self, index: None | QModelIndex) -> None:
         """Update Info of currently selected Item."""
+        print(index)
+
         if index is None:
             return
 
@@ -400,28 +396,31 @@ class MainWindow(QMainWindow):
         self.cur_file = pathlib.Path(parents_list[0])
         self.cur_obj_path = path
 
-        if len(parents_list) == 1:
-            self.table_model_dataset.resetData()
-            self.table_model_dataset.appendRow(["Name", parents_list[0]])
-            self.table_model_dataset.appendRow(["File Size", file_size_to_str(parents_list[0])])
-            return
+        # if len(parents_list) == 1:
+        #     self.table_model_dataset.resetData()
+        #     self.table_model_dataset.appendRow(["Name", parents_list[0]])
+        #     self.table_model_dataset.appendRow(["File Size", file_size_to_str(parents_list[0])])
+        #     return
+        #
+        # with h5py.File(parents_list[0], "r") as file:
+        #     h5_obj = file[path]
+        #
+        #     if isinstance(h5_obj, h5py.Group):
+        #         self.table_model_dataset.resetData()
+        #         self.table_model_dataset.appendRow(["Name", str(h5_obj.name)])
+        #
+        #     elif isinstance(h5_obj, h5py.Dataset):
+        #         self.table_model_dataset.resetData()
+        #         self.table_model_dataset.appendRow(["Name", str(h5_obj.name)])
+        #         self.table_model_dataset.appendRow(["Data", f"shape {h5_obj.shape} of type {h5_obj.dtype}"])
+        #
+        #         for attribute, value in h5_obj.attrs.items():
+        #             self.table_model_dataset.appendRow([attribute, str(value)])
 
-        with h5py.File(parents_list[0], "r") as file:
-            h5_obj = file[path]
+        # print("plot", self.cb_plot_type.currentData())
+        print("plot", self.cb_plot_type.currentIndex())
 
-            if isinstance(h5_obj, h5py.Group):
-                self.table_model_dataset.resetData()
-                self.table_model_dataset.appendRow(["Name", str(h5_obj.name)])
-
-            elif isinstance(h5_obj, h5py.Dataset):
-                self.table_model_dataset.resetData()
-                self.table_model_dataset.appendRow(["Name", str(h5_obj.name)])
-                self.table_model_dataset.appendRow(["Data", f"shape {h5_obj.shape} of type {h5_obj.dtype}"])
-
-                for attribute, value in h5_obj.attrs.items():
-                    self.table_model_dataset.appendRow([attribute, str(value)])
-
-        self._plot_data(self.cb_plot_type.currentText())
+        self.plot_data(self.cb_plot_type.currentText())
 
     def _tree_recursion(self, item: QModelIndex, path: list[str]) -> None:
         """Get Array of all Parents."""
@@ -480,7 +479,7 @@ class MainWindow(QMainWindow):
 
         settings.setValue("paths/last_opened_file_directory", pathlib.Path(file_paths[0]).parent)
         for file in file_paths:
-            self._open_file(pathlib.Path(file))
+            self.open_file(pathlib.Path(file))
 
     @pyqtSlot()
     def _handle_action_open_folder(self) -> None:
@@ -497,13 +496,13 @@ class MainWindow(QMainWindow):
 
         settings.setValue("paths/last_opened_folder_directory", pathlib.Path(folder_path))
         for file in os.listdir(folder_path):
-            self._open_file(pathlib.Path(folder_path, file))
+            self.open_file(pathlib.Path(folder_path, file))
 
     @pyqtSlot()
     def _handle_action_clear_files(self) -> None:
         """Clear Tree Widget."""
         self.tree_model_file.clear()
-        self.table_model_dataset.resetData()
+        # self.table_model_dataset.resetData()
 
     @pyqtSlot()
     def _handle_action_about(self) -> None:
